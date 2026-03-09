@@ -59,6 +59,9 @@ spring:
     forward-headers-strategy: native
 
   kafka:
+    listener:
+      concurrency: 1
+      ack-mode: manual_immediate
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -66,6 +69,8 @@ spring:
     consumer:
       group-id: barleyssal-stats-group
       auto-offset-reset: earliest
+      max-poll-records: 10
+      fetch-max-wait: 500ms
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:

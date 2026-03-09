@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.global.config;
 
-import com.fasterxml.jackson.databind.JsonSerializer;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -12,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class KafkaConfig {
     public ConsumerFactory<String, String> consumerFactory() { // Object 대신 String
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, "barleyssal-stats-group");
+//        config.put(ConsumerConfig.GROUP_ID_CONFIG, "barleyssal-stats-group");
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // Key, Value 모두 StringDeserializer 사용

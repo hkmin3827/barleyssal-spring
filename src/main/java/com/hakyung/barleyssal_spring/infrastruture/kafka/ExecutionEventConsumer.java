@@ -35,7 +35,7 @@ public class ExecutionEventConsumer {
     @KafkaListener(
             topics      = "execution.event",
             groupId     = "barleyssal-spring",
-            concurrency = "2"
+            concurrency = "1"
     )
     public void onExecutionEvent(String message) {
 
