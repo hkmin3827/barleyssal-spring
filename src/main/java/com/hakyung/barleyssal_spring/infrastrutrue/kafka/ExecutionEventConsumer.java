@@ -1,5 +1,6 @@
 package com.hakyung.barleyssal_spring.infrastrutrue.kafka;
 
+import com.hakyung.barleyssal_spring.application.account.AccountService;
 import com.hakyung.barleyssal_spring.domain.account.Account;
 import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
@@ -10,6 +11,7 @@ import com.hakyung.barleyssal_spring.domain.order.OrderSide;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastrutrue.kafka.events.ExecutionEvent;
+import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,12 +30,13 @@ public class ExecutionEventConsumer {
 
     private final OrderRepository orderRepository;
     private final AccountRepository accountRepository;
+    private final RedisAccountRepository redisAccountRepository;
 
     @Transactional
     @KafkaListener(
-        topics     = MockMatchingEngineConsumer.TOPIC_EXECUTION_EVENT,
-        groupId    = "stocksim-core",
-        concurrency = "2"
+            topics      = "execution.event",
+            groupId     = "stocksim-core",
+            concurrency = "2"
     )
     public void onExecutionEvent(ExecutionEvent event) {
         log.info("Execution received: orderId={} price={} qty={}",
@@ -59,11 +62,11 @@ public class ExecutionEventConsumer {
             }
             accountRepository.save(account);
 
+            redisAccountRepository.syncAccountToRedis(account);
+
             log.info("Asset updated: accountId={} symbol={} side={}", event.accountId(), event.stockCode(), event.orderSide());
         } catch (Exception e) {
             log.error("Failed to process ExecutionEvent: orderId={}", event.orderId(), e);
-
-
             throw e;  // re-throw → Kafka retry
         }
     }

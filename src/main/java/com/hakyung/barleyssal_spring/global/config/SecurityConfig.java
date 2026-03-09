@@ -22,14 +22,14 @@ public class SecurityConfig {
     private final SessionJwtAuthenticationFilter sessionJwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain springSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers("/api/v1/auth/**"))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 세션 사용
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                // 핵심: 세션에 저장된 JWT를 꺼내서 인증 객체를 만들어주는 필터 추가
+                // 세션에 저장된 JWT를 꺼내서 인증 객체를 만들어주는 필터 추가
                 .addFilterBefore(sessionJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

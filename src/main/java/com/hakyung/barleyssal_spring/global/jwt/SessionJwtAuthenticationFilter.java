@@ -1,7 +1,7 @@
 package com.hakyung.barleyssal_spring.global.jwt;
 
-import hakyung.barleyssal_spring.domain.user.constant.Role;
-import hakyung.barleyssal_spring.global.security.CustomUserDetails;
+import com.hakyung.barleyssal_spring.domain.user.Role;
+import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;

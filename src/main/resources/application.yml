@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: ${DB_URL}
-    userName: ${DB_USERNAME}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
       leak-detection-threshold: 2000
@@ -28,10 +28,11 @@ spring:
 
   data:
     redis:
-      host: redis
+      host: ${REDIS_HOST_NAME}
       port: 6379
       database: 1
       password: ${REDIS_PASSWORD}
+      username: default
       timeout: 3000ms
       lettuce:
         pool:
@@ -58,6 +59,10 @@ spring:
         username="${KAFKA_USER}" \
         password="${KAFKA_PASSWORD}";
 
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 3s
+    socket-timeout: 10s
 
   mail:
     host: smtp.naver.com
@@ -79,8 +84,9 @@ server:
         http-only: true
         secure: true
         same-site: lax
+
 jwt:
-  secret: ${JWT_SECRET_KEY}
+  secret: "barleyssal-project-secret-key-must-be-at-least-32-characters-long!!"
   expiration: 86400000 # 24시간
 
 app:

@@ -5,12 +5,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o JOIN Account a ON o.accountId = a.id WHERE a.userId = :userId ORDER BY o.createdAt DESC")
     List<Order> findByAccountIdAndUserId(@Param("accoutId") Long accountId, @Param("userId") Long userId);
 
-    List<Order> findByAccountIdAndStatus(UUID accountId, OrderStatus status);
+    List<Order> findByAccountIdAndOrderStatus(Long accountId, OrderStatus orderStatus);
 }

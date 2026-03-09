@@ -15,7 +15,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "orders", indexes = {
         @Index(name = "idx_orders_account_id", columnList = "account_id"),
-        @Index(name = "idx_orders_status", columnList = "status"),
+        @Index(name = "idx_orders_status", columnList = "order_status"),
         @Index(name = "idx_orders_stock_code", columnList = "stock_code")
 })
 @Getter

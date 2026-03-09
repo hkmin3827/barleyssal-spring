@@ -1,5 +1,6 @@
 package com.hakyung.barleyssal_spring.application.order;
 
+import com.hakyung.barleyssal_spring.application.account.AccountService;
 import com.hakyung.barleyssal_spring.application.order.dto.CreateOrderRequest;
 import com.hakyung.barleyssal_spring.application.order.dto.OrderResponse;
 import com.hakyung.barleyssal_spring.domain.account.Account;
@@ -13,8 +14,11 @@ import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastrutrue.kafka.OrderEventProducer;
 import com.hakyung.barleyssal_spring.infrastrutrue.kafka.events.OrderCreatedEvent;
+import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisAccountRepository;
+import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final AccountRepository accountRepository;
     private final OrderEventProducer orderEventProducer;
+    private final RedisOrderRepository redisOrderRepository;
+    private final RedisAccountRepository redisAccountRepository;
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest req) {
@@ -57,11 +63,14 @@ public class OrderService {
         );
         orderRepository.save(order);
 
-        var event = OrderCreatedEvent.from(order);
+        if (req.orderType() == OrderType.LIMIT) {
+            redisOrderRepository.saveLimitOrder(order);
+        }
 
-        orderEventProducer.publishOrderCreated(event);
+        orderEventProducer.publishOrderCreated(OrderCreatedEvent.from(order));
         order.markSubmitted();
 
+        redisAccountRepository.syncAccountToRedis(account);
         log.info("Order placed: orderId={} code={} side={}", order.getId(), code, req.orderSide());
         return OrderResponse.from(order);
     }

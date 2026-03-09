@@ -84,6 +84,11 @@ public class Account {
     public void processSell(StockCode code, long qty, Money price) {
         Holding h = findHolding(code)
                 .orElseThrow(() -> new CustomException(ErrorCode.HOLDING_NOT_FOUND));
+
+        // 확정 손익 계산
+        BigDecimal profit = price.amount().subtract(h.getAvgPrice()).multiply(BigDecimal.valueOf(qty));
+        this.totalEquity = this.totalEquity.add(profit);
+
         h.subtractQuantity(qty);
         if(h.isEmpty()) holdings.remove(h);
 

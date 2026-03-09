@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.userName as userName,
             u.active as active
         from User u
-        where u.role = hakyung.imoticon_spring.domain.user.constant.Role.ROLE_USER
+        where u.role = com.hakyung.barleyssal_spring.domain.user.Role.ROLE_USER
         order by u.createdAt asc
     """)
     Page<UsersListResponse> findUsersByActive(@Param("active") boolean active, Pageable pageable);

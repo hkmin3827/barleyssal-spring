@@ -26,7 +26,7 @@ public record OrderResponse(
 ) {
     public static OrderResponse from(Order o) {
         return new OrderResponse(
-            o.getId(), o.getAccountId(), o.getStockCode(),
+            o.getId(), o.getAccountId(), String.valueOf(o.getStockCode()),
             o.getOrderSide(), o.getOrderType(), o.getOrderStatus(),
             o.getQuantity(),   o.getLimitPrice(), o.getExecutedQuantity(),
             o.getExecutedPrice(), o.getCreatedAt(), o.getUpdatedAt()

@@ -58,6 +58,7 @@ public class User {
         user.encodedPassword = encodedPassword;
         user.userName = req.userName();
         user.role = Role.ROLE_USER;
+        user.phoneNumber = req.phoneNumber();
         user.createdAt = LocalDateTime.now();
         user.active = true;
         return user;
