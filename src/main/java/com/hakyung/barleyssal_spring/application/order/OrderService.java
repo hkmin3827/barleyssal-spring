@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.application.order;
 
-import com.hakyung.barleyssal_spring.application.account.AccountService;
 import com.hakyung.barleyssal_spring.application.order.dto.CreateOrderRequest;
 import com.hakyung.barleyssal_spring.application.order.dto.OrderResponse;
 import com.hakyung.barleyssal_spring.domain.account.Account;
@@ -9,21 +8,21 @@ import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
 import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
+import com.hakyung.barleyssal_spring.domain.order.OrderSide;
 import com.hakyung.barleyssal_spring.domain.order.OrderType;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
-import com.hakyung.barleyssal_spring.infrastrutrue.kafka.OrderEventProducer;
-import com.hakyung.barleyssal_spring.infrastrutrue.kafka.events.OrderCreatedEvent;
-import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisAccountRepository;
-import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisOrderRepository;
+import com.hakyung.barleyssal_spring.infrastruture.kafka.OrderEventProducer;
+import com.hakyung.barleyssal_spring.infrastruture.kafka.events.OrderCreatedEvent;
+import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
+import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 
 @Slf4j
@@ -73,6 +72,32 @@ public class OrderService {
         redisAccountRepository.syncAccountToRedis(account);
         log.info("Order placed: orderId={} code={} side={}", order.getId(), code, req.orderSide());
         return OrderResponse.from(order);
+    }
+
+    @Transactional
+    public void cancelOrder(Long userId, Long orderId) {
+        Account account = accountRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        Order order = orderRepository.findByIdAndAccountId(orderId, account.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        order.cancel();
+
+        if (order.getOrderSide() == OrderSide.BUY) {
+            Money refundAmount = Money.of(order.getLimitPrice().multiply(BigDecimal.valueOf(order.getQuantity())));
+            account.unblockDeposit(refundAmount);
+        } else {
+            account.unblockHolding(order.getStockCode(), order.getQuantity());
+        }
+
+        if (order.getOrderType() == OrderType.LIMIT) {
+            redisOrderRepository.removeLimitOrder(order);
+        }
+
+        redisAccountRepository.syncAccountToRedis(account);
+
+        log.info("Order cancelled successfully: orderId={}", order.getId());
     }
 
     @Transactional(readOnly = true)

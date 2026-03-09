@@ -79,8 +79,8 @@ public class User {
 
     public void activate() { this.active = true; }
     public void deactivate() { this.active = false; }
+
     public void softDelete() {
-        this.active = false;
         this.deletedAt = LocalDateTime.now();
     }
 }

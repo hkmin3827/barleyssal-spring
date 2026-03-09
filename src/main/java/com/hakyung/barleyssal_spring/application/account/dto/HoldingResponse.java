@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.application.account.dto;
 
-
 import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
 import com.hakyung.barleyssal_spring.domain.holding.Holding;
 

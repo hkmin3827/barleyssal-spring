@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/account")
+@RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
 
     /** 내 계좌 조회 */
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<AccountResponse> getMyAccount(
         @AuthenticationPrincipal CustomUserDetails user
     ) {
@@ -29,7 +29,7 @@ public class AccountController {
     }
 
     /** 원금 설정 */
-    @PutMapping("/principal")
+    @PutMapping("/set-principal")
     public ResponseEntity<AccountResponse> setPrincipal(
         @AuthenticationPrincipal CustomUserDetails user,
         @Valid @RequestBody SetPrincipalRequest req
@@ -38,7 +38,7 @@ public class AccountController {
     }
 
     /** 보유 종목 리스트 */
-    @GetMapping("/holdings")
+    @GetMapping("/me/holdings")
     public ResponseEntity<List<HoldingResponse>> getHoldings(
         @AuthenticationPrincipal CustomUserDetails user
     ) {

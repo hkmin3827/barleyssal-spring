@@ -4,7 +4,6 @@ import com.hakyung.barleyssal_spring.domain.account.Account;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
 
 public record AccountResponse(
     Long id,

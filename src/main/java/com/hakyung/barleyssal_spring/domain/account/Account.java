@@ -29,7 +29,7 @@ public class Account {
     @Column(nullable = false, unique = true, length = 20)
     private String accountNumber;
 
-    @Column(name = "user_id", nullable = false, unique = false)
+    @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
     @Column(name = "principal", nullable = false, precision = 19, scale = 2)
@@ -65,7 +65,7 @@ public class Account {
     public void resetPrincipal(Money newPrincipal) {
         this.principal = newPrincipal.amount();
         this.deposit   = newPrincipal.amount();
-        this.holdings.clear();  // 원금 재설정 시 계좌 주식 내역 초기화
+        this.holdings.clear();
         touch();
     }
 
@@ -85,7 +85,6 @@ public class Account {
         Holding h = findHolding(code)
                 .orElseThrow(() -> new CustomException(ErrorCode.HOLDING_NOT_FOUND));
 
-        // 확정 손익 계산
         BigDecimal profit = price.amount().subtract(h.getAvgPrice()).multiply(BigDecimal.valueOf(qty));
         this.totalEquity = this.totalEquity.add(profit);
 
@@ -121,4 +120,13 @@ public class Account {
         holding.block(qty);
     }
 
+    public void unblockDeposit(Money refundAmount) {
+        this.deposit = this.deposit.add(refundAmount.amount());
+    }
+
+    public void unblockHolding(StockCode code, long qty) {
+        Holding holding = findHolding(code)
+                .orElseThrow(() -> new CustomException(ErrorCode.HOLDING_NOT_FOUND));
+        holding.unblock(qty);
+    }
 }

@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.application.auth.service;
 
-import com.hakyung.barleyssal_spring.application.auth.dto.LoginRequest;
 import com.hakyung.barleyssal_spring.application.auth.dto.SignupRequest;
 import com.hakyung.barleyssal_spring.application.auth.dto.WithdrawRequest;
 import com.hakyung.barleyssal_spring.domain.user.User;
@@ -18,26 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Transactional(readOnly = true)
-    public User authenticate(LoginRequest req) {
-        User user = userRepository.findByEmail(req.email())
-                .orElseThrow(UserNotFoundException::new);
-
-        if(user.getDeletedAt() != null) {
-            throw new CustomException(ErrorCode.DELETED_ACCOUNT);
-        }
-
-        if(!user.isActive() && user.getDeletedAt() == null) {
-            throw new CustomException(ErrorCode.INACTIVE_USER);
-        }
-
-        if (!passwordEncoder.matches(req.password(), user.getEncodedPassword())) {
-            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
-        }
-
-        return user;
-    }
 
     @Transactional
     public User signup(SignupRequest req) {

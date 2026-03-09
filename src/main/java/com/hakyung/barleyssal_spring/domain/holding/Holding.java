@@ -48,7 +48,6 @@ public class Holding {
         return h;
     }
 
-    // 매수 => 평균 단가 재계산
     public void addQuantity(long qty, Money price) {
         BigDecimal totalCost = this.avgPrice.multiply(BigDecimal.valueOf(qty))
                 .add(price.amount().multiply(BigDecimal.valueOf(qty)));
@@ -70,11 +69,13 @@ public class Holding {
         this.blockedQuantity += qty;
     }
 
+    public void unblock(long qty) {
+        if (this.blockedQuantity - qty < 0) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST_QUANTITY);
+        }
+        this.blockedQuantity -= qty;
+    }
     public boolean isEmpty() {
         return this.totalQuantity == 0;
-    }
-
-    public Money currentAvyPrice() {
-        return  Money.of(this.avgPrice);
     }
 }

@@ -1,7 +1,5 @@
 package com.hakyung.barleyssal_spring.application.order.dto;
 
-
-import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
 import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.order.OrderSide;
 import com.hakyung.barleyssal_spring.domain.order.OrderStatus;

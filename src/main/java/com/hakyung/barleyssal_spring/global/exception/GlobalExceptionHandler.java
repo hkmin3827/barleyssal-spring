@@ -1,8 +1,12 @@
 package com.hakyung.barleyssal_spring.global.exception;
 
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,6 +17,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @RestControllerAdvice
+
 public class GlobalExceptionHandler {
     static class ErrorResponse {
         private final int status;
@@ -29,6 +34,30 @@ public class GlobalExceptionHandler {
         public String getMessage() {return message;}
     }
 
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabledException(DisabledException ex) {
+        return createErrorResponse(ErrorCode.INACTIVE_USER);
+    }
+
+    @ExceptionHandler(AccountExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleAccountExpiredException(AccountExpiredException ex) {
+        return createErrorResponse(ErrorCode.DELETED_ACCOUNT);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        return createErrorResponse(ErrorCode.AUTH_FAILED);
+    }
+
+    public ResponseEntity<ErrorResponse> handleOptimisticLocking(OptimisticLockingFailureException ex) {
+        return createErrorResponse(ErrorCode.ALREADY_PROCESSED);
+    }
+
+    private ResponseEntity<ErrorResponse> createErrorResponse(ErrorCode errorCode) {
+        return new ResponseEntity<>(new ErrorResponse(errorCode), errorCode.getHttpStatus());
+    }
+
+
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex){
         ErrorCode code = ex.getErrorCode();
@@ -36,13 +65,6 @@ public class GlobalExceptionHandler {
         ErrorResponse res = new ErrorResponse(code);
 
         return  new ResponseEntity<>(res, code.getHttpStatus());
-    }
-
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<String> handleMaxSize(MaxUploadSizeExceededException ex){
-        return ResponseEntity
-                .badRequest()
-                .body("파일 용량이 업로드 가능 범위를 초과하였습니다. (최대 10MB)");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 등록된 이메일입니다."),
     PHONE_NUMBER_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 번호입니다."),
+    AUTH_FAILED(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다."),
     HOLDING_NOT_FOUND(HttpStatus.NOT_FOUND,"주식 종목을 찾을 수 없습니다."),
@@ -20,13 +21,16 @@ public enum ErrorCode {
     INACTIVE_USER_ALREADY(HttpStatus.CONFLICT, "이미 비활성화된 사용자입니다."),
     ACTIVE_USER_ALREADY(HttpStatus.CONFLICT, "이미 활성화된 사용자입니다."),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
-    INSUFFICIENT_DEPOSIT(HttpStatus.UNPROCESSABLE_ENTITY, "잔액이 부족합니다."),
+    INSUFFICIENT_DEPOSIT(HttpStatus.CONFLICT, "잔액이 부족합니다."),
     NOT_ENOUGH_STOCK_QUANTITY_TO_SELL(HttpStatus.BAD_REQUEST, "매도 주식 수량이 현재 보유한 수량을 초과했습니다."),
     UNSUITABLE_ORDER_STATUS(HttpStatus.CONFLICT, "기존 주문 상태가 요청에 적합하지 않습니다."),
     ORDER_FILLED_ALREADY(HttpStatus.CONFLICT, "이미 체결된 주문건입니다."),
     ORDER_CANCELLED_ALREADY(HttpStatus.CONFLICT, "이미 취소된 주문건입니다."),
     LIMIT_PRICE_REQUIRED(HttpStatus.BAD_REQUEST, "지정가 주문은 지정가 입력이 필요합니다."),
-    INVALID_EXECUTED_QUANTITY(HttpStatus.CONFLICT, "주문 매도 수량보다 매도 수량이 큽니다. 관리자 확인이 필요합니다.");
+    INVALID_EXECUTED_QUANTITY(HttpStatus.CONFLICT, "주문 매도 수량보다 매도 수량이 큽니다. 관리자 확인이 필요합니다."),
+    INVALID_PRINCIPAL_UNIT(HttpStatus.BAD_REQUEST, "원금은 10원 단위로 입력해야합니다."),
+    INVALID_REQUEST_QUANTITY(HttpStatus.CONFLICT, "주문했던 주식 수가 취소 요청한 수보다 작습니다. 관리자 확인이 필요합니다."),
+    ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리되었거나 변경된 주문입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

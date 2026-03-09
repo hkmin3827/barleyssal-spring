@@ -20,7 +20,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    /** 주문 등록 (매수/매도) */
     @PostMapping
     public ResponseEntity<OrderResponse> placeOrder(
         @AuthenticationPrincipal CustomUserDetails user,
@@ -30,7 +29,16 @@ public class OrderController {
             .body(orderService.createOrder(user.getId(), req));
     }
 
-    /** 내 주문 이력 */
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long orderId
+    ) {
+        orderService.cancelOrder(user.getId(), orderId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getMyOrders(
         @AuthenticationPrincipal CustomUserDetails user
@@ -38,7 +46,6 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersByUser(user.getId()));
     }
 
-    /** 개별 주문 조회 */
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.getOrder(orderId));

@@ -38,3 +38,4 @@ out/
 
 .env
 docker-compose.yml
+kafka_server_jaas.conf

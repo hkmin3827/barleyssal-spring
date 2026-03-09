@@ -22,7 +22,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 프로필 수정전 진입시점
     public void verifyPassword(Long userId, PasswordVerifyRequest req) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -65,8 +64,8 @@ public class UserService {
         return UserDetailResponse.from(user);
     }
 
-    // 관리자 호출 메서드
 
+    // 관리자 호출 메서드
     @Transactional(readOnly = true)
     public Page<UsersListResponse> getUsersByActive(boolean active, Pageable pageable) {
         return userRepository.findUsersByActive(active, pageable);
@@ -82,7 +81,7 @@ public class UserService {
     @Transactional
     public void activate(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId).orElseThrow(UserNotFoundException::new);
-        if(user.isActive() == true) {
+        if(user.isActive()) {
             throw new CustomException(ErrorCode.ACTIVE_USER_ALREADY);
         }
         user.activate();
@@ -91,7 +90,7 @@ public class UserService {
     @Transactional
     public void deactivate(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId).orElseThrow(UserNotFoundException::new);
-        if(user.isActive() == false) {
+        if(!user.isActive()) {
             throw new CustomException(ErrorCode.INACTIVE_USER_ALREADY);
         }
         user.deactivate();

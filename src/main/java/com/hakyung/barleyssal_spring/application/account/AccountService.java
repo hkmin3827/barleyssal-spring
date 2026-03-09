@@ -9,15 +9,13 @@ import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
-import com.hakyung.barleyssal_spring.infrastrutrue.redis.RedisAccountRepository;
+import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -45,6 +43,9 @@ public class AccountService {
 
     @Transactional
     public AccountResponse setPrincipal(Long userId, SetPrincipalRequest req) {
+        if (req.principal().remainder(BigDecimal.TEN).compareTo(BigDecimal.ZERO) != 0) {
+            throw new CustomException(ErrorCode.INVALID_PRINCIPAL_UNIT);
+        }
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.resetPrincipal(Money.of(req.principal()));
@@ -62,24 +63,5 @@ public class AccountService {
         return account.getHoldings().stream()
                 .map(HoldingResponse::from)
                 .toList();
-    }
-
-    public void syncAccountToRedis(Long userId) {
-        Account account = accountRepository.findByUserIdWithHoldings(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
-
-        String statusKey = "account:status:" + userId;
-        Map<String, String> data = new HashMap<>();
-        data.put("deposit", account.getDeposit().toString());
-        data.put("principal", account.getPrincipal().toString());
-        data.put("totalEquity", account.getTotalEquity().toString());
-        redisTemplate.opsForHash().putAll(statusKey, data);
-
-        String holdingKey = "account:holdings:" + userId;
-        redisTemplate.delete(holdingKey);
-        account.getHoldings().forEach(h -> {
-            long sellableQty = h.getTotalQuantity() - h.getBlockedQuantity();
-            redisTemplate.opsForHash().put(holdingKey, h.getStockCode().value(), String.valueOf(sellableQty));
-        });
     }
 }

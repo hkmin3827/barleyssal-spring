@@ -52,7 +52,7 @@ public class Order {
     private BigDecimal limitPrice;
 
     @Column(name = "executed_price", precision = 19, scale = 2)
-    private BigDecimal executedPrice;  // 실제 체결 가격
+    private BigDecimal executedPrice;
 
     @Column(name = "executed_quantity")
     private Long executedQuantity;
@@ -65,6 +65,9 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private OrderRejectReason rejectReason;
+
+    @Version
+    private Long version;
 
     public static Order create(
             Long accountId,
@@ -119,23 +122,10 @@ public class Order {
         touch();
     }
 
-
-    public boolean isFilled()    { return orderStatus == OrderStatus.FILLED; }
-    public boolean isPending()   { return orderStatus == OrderStatus.PENDING; }
-    public boolean isSubmitted() { return orderStatus == OrderStatus.SUBMITTED; }
-
-    public Money limitPriceMoney() {
-        return limitPrice != null ? Money.of(limitPrice) : null;
-    }
-
-    public Long orderId() { return this.id; }
-    public Long accountId() { return this.accountId; }
-
     private void requireStatus(OrderStatus... allowed) {
         for (var s : allowed) if (this.orderStatus == s) return;
         throw new CustomException(ErrorCode.UNSUITABLE_ORDER_STATUS);
     }
 
     private void touch() { this.updatedAt = Instant.now(); }
-
 }

@@ -1,6 +1,8 @@
 package com.hakyung.barleyssal_spring.global.jwt;
 
-import com.hakyung.barleyssal_spring.domain.user.Role;
+import com.hakyung.barleyssal_spring.domain.user.User;
+import com.hakyung.barleyssal_spring.domain.user.UserRepository;
+import com.hakyung.barleyssal_spring.global.exception.UserNotFoundException;
 import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -11,8 +13,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,13 +29,14 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class SessionJwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        return uri.equals("/api/auth/login")
-                || uri.equals("/api/auth/signup")
+        return uri.equals("/api/v1/auth/login")
+                || uri.equals("/api/v1/auth/signup")
                 || uri.startsWith("/swagger")
                 || uri.startsWith("/v3/api-docs")
                 || uri.endsWith(".html")
@@ -43,51 +49,54 @@ public class SessionJwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         HttpSession session = req.getSession(false);
-        if(session != null && session.getAttribute("ACCESS_TOKEN") != null){
+
+        if (session != null && session.getAttribute("ACCESS_TOKEN") != null) {
             String accessToken = (String) session.getAttribute("ACCESS_TOKEN");
 
-            try{
+            try {
                 Long userId = jwtProvider.getId(accessToken);
-                Role role = jwtProvider.getRole(accessToken);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        createAuthentication(userId, role, req);
+                User user = userRepository.findById(userId)
+                        .orElseThrow(UserNotFoundException::new);
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+                if (!user.isActive()) {
+                    throw new DisabledException("비활성화된 계정입니다.");
+                }
+
+                if (user.getDeletedAt() != null) {
+                    throw new AccountExpiredException("탈퇴한 계정입니다.");
+                }
+
+                UsernamePasswordAuthenticationToken authentication = createAuthentication(user, req);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (ExpiredJwtException e) {
-                sendUnauthorizedResponse(res);
+                sendErrorResponse(res, "TOKEN_EXPIRED", "만료된 토큰입니다.");
                 return;
-
-            } catch (JwtException | IllegalArgumentException e) {
-                sendUnauthorizedResponse(res);
+            } catch (UsernameNotFoundException | DisabledException | JwtException e) {
+                sendErrorResponse(res, "UNAUTHORIZED", e.getMessage());
+                return;
+            } catch (Exception e) {
+                res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 return;
             }
         }
         chain.doFilter(req, res);
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse res) throws IOException {
+    private void sendErrorResponse(HttpServletResponse res, String code, String message) throws IOException {
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         res.setCharacterEncoding(StandardCharsets.UTF_8.name());
         res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-        res.getWriter().write("""
-            {
-              "code": "UNAUTHORIZED",
-              "message": "유효하지 않거나 만료된 토큰입니다."
-            }
-            """);
+        res.getWriter().write(String.format("{\"code\": \"%s\", \"message\": \"%s\"}", code, message));
     }
 
     private UsernamePasswordAuthenticationToken createAuthentication(
-            Long userId,
-            Role role,
+            User user,
             HttpServletRequest request
     ) {
         CustomUserDetails userDetails =
-                new CustomUserDetails(userId, role);
+                new CustomUserDetails(user);
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
