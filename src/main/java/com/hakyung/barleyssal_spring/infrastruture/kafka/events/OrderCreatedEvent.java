@@ -7,22 +7,20 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record OrderCreatedEvent(
-    Long eventId,
-    Instant occurredAt,
-    String orderId,
-    String accountId,
-    String stockCode,
-    String orderSide,
-    String orderType,
-    String quantity,
-    BigDecimal limitPrice,
-    Instant timestamp
+        String orderId,
+        Instant occurredAt,
+        String accountId,
+        String stockCode,
+        String orderSide,
+        String orderType,
+        String quantity,
+        BigDecimal limitPrice,
+        Instant timestamp
 ) implements DomainEvent {
     public static OrderCreatedEvent from(Order order) {
         return new OrderCreatedEvent(
-                order.getId(),
-                Instant.now(),
                 String.valueOf(order.getId()),
+                Instant.now(),
                 String.valueOf(order.getAccountId()),
                 order.getStockCode().value(),
                 order.getOrderSide().name(),

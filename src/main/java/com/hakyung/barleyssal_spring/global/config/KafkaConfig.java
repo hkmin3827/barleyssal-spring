@@ -8,16 +8,36 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.util.backoff.FixedBackOff;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.StreamWriteFeature;
+import tools.jackson.core.json.JsonWriteFeature;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
+
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
+        return JsonMapper.builder()
+                .findAndAddModules() // JavaTimeModule 등을 자동 등록 (Instant 처리에 필수)
+                .enable(StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN) // 0.0000001 유지
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) // 필드 불일치 시 에러 방지
+                .build();
+    }
 
     @Value("${spring.kafka.bootstrap-servers:127.0.0.1:9092}")
     private String bootstrapServers;
@@ -89,4 +109,14 @@ public class KafkaConfig {
                 .config("retention.ms", "3600000") // 통계 서버가 가져가면 바로 지워지도록 1시간으로 설정 (디스크 절약)
                 .build();
     }
+
+    @Bean
+    public DefaultErrorHandler errorHandler() {
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, 3L);
+
+        return new DefaultErrorHandler((record, exception) -> {
+            System.err.println("최종 실패한 메시지: " + record.value() + ", 원인: " + exception.getMessage());
+        }, fixedBackOff);
+    }
 }
+

@@ -35,9 +35,6 @@ public class Account {
     @Column(name = "principal", nullable = false, precision = 19, scale = 2)
     private BigDecimal principal = BigDecimal.ZERO;
 
-    @Column(name = "total_equity", nullable = false, precision = 19, scale = 2)
-    private BigDecimal totalEquity = BigDecimal.ZERO;
-
     @Column(name = "deposit", nullable = false, precision = 19, scale = 2)
     private BigDecimal deposit = BigDecimal.ZERO;
 
@@ -55,7 +52,6 @@ public class Account {
         acc.userId = userId;
         acc.principal = principal.amount();
         acc.accountNumber = accountNumber;
-        acc.totalEquity = principal.amount();
         acc.deposit = principal.amount();
         acc.createdAt = Instant.now();
         acc.updatedAt = Instant.now();
@@ -84,9 +80,6 @@ public class Account {
     public void processSell(StockCode code, long qty, Money price) {
         Holding h = findHolding(code)
                 .orElseThrow(() -> new CustomException(ErrorCode.HOLDING_NOT_FOUND));
-
-        BigDecimal profit = price.amount().subtract(h.getAvgPrice()).multiply(BigDecimal.valueOf(qty));
-        this.totalEquity = this.totalEquity.add(profit);
 
         h.subtractQuantity(qty);
         if(h.isEmpty()) holdings.remove(h);

@@ -42,8 +42,8 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     public JacksonJsonpMapper jsonpMapper() {
         // 주식 데이터(BigDecimal) 및 시간 처리를 위한 최적화된 매퍼 구성
         ObjectMapper mapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule()) // JDK 25 및 LocalDateTime 지원
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 가독성 높은 ISO 형식 사용
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         return new JacksonJsonpMapper(mapper);
     }

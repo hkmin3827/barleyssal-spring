@@ -69,6 +69,7 @@ spring:
     consumer:
       group-id: barleyssal-stats-group
       auto-offset-reset: earliest
+      enable-auto-commit: false
       max-poll-records: 10
       fetch-max-wait: 500ms
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

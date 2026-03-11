@@ -13,7 +13,9 @@ import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -30,6 +32,7 @@ public class ExecutionEventConsumer {
     private final AccountRepository accountRepository;
     private final RedisAccountRepository redisAccountRepository;
     private final ObjectMapper objectMapper;
+    private final DlqService dlqService;
 
     @Transactional
     @KafkaListener(
@@ -37,7 +40,7 @@ public class ExecutionEventConsumer {
             groupId     = "barleyssal-spring",
             concurrency = "1"
     )
-    public void onExecutionEvent(String message) {
+    public void onExecutionEvent(String message, Acknowledgment ack) {
 
         try {
             ExecutionEvent event = objectMapper.readValue(message, ExecutionEvent.class);
@@ -65,10 +68,19 @@ public class ExecutionEventConsumer {
 
             redisAccountRepository.syncAccountToRedis(account);
 
+            ack.acknowledge();
+
             log.info("Asset updated: accountId={} symbol={} side={}", event.accountId(), event.stockCode(), event.orderSide());
+        } catch (CustomException e) {
+            log.error("데이터 에러 : ", e.getErrorCode());
+            dlqService.sendToDlq("execution.event", message, e.getErrorCode().name(), "BUSINESS_ERROR");
+            ack.acknowledge();
+        } catch (TransientDataAccessException e) {
+            log.error("일시적인 인프라 장애 발생 - 재시도 유도: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.error("메시지 처리 실패", e);
-            throw e;  // re-throw → Kafka retry
+            log.error("알 수 없는 시스템 에러 발생: {}", e.getMessage(), e);
+            throw e;
         }
     }
 }
