@@ -63,10 +63,10 @@ public class OrderService {
         orderRepository.save(order);
 
         if (req.orderType() == OrderType.LIMIT) {
-            redisOrderRepository.saveLimitOrder(order);
+            redisOrderRepository.saveLimitOrder(order, userId);
         }
 
-        orderEventProducer.publishOrderCreated(OrderCreatedEvent.from(order));
+        orderEventProducer.publishOrderCreated(OrderCreatedEvent.from(order, userId));
         order.markSubmitted();
 
         redisAccountRepository.syncAccountToRedis(account);
@@ -92,7 +92,7 @@ public class OrderService {
         }
 
         if (order.getOrderType() == OrderType.LIMIT) {
-            redisOrderRepository.removeLimitOrder(order);
+            redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
         }
 
         redisAccountRepository.syncAccountToRedis(account);

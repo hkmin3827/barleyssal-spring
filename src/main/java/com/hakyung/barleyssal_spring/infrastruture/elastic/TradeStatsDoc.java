@@ -1,10 +1,7 @@
 package com.hakyung.barleyssal_spring.infrastruture.elastic;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.LocalDateTime;
 
@@ -19,5 +16,6 @@ TradeStatsDoc(
         @Field(type = FieldType.Double) Double executedPrice,
         @Field(type = FieldType.Long) Long quantity,
         @Field(type = FieldType.Double) Double profitRate,
-        @Field(type = FieldType.Date) LocalDateTime timestamp
+        @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
+        LocalDateTime timestamp
 ) {}

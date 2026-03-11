@@ -22,17 +22,10 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
     @Override
     public ClientConfiguration clientConfiguration() {
-        // "http://" 문자열 제거 (ClientConfiguration.builder는 호스트:포트 형식 기대)
         String cleanUri = elasticsearchUri.replace("http://", "").replace("https://", "");
 
         return ClientConfiguration.builder()
                 .connectedTo(cleanUri)
-//                .usingSsl(false)
-//                .withDefaultHeaders(new HttpHeaders() {{
-//                    add("Accept", "application/vnd.elasticsearch+json; compatible-with=8");
-//                    add("Content-Type", "application/vnd.elasticsearch+json; compatible-with=8");
-//                }})
-                // 저사양 인프라 최적화: 타임아웃을 타이트하게 설정하여 불필요한 대기 스레드 방지
                 .withConnectTimeout(Duration.ofSeconds(5))
                 .withSocketTimeout(Duration.ofSeconds(3))
                 .build();

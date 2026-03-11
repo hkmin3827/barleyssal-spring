@@ -15,12 +15,9 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
-import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.StreamWriteFeature;
-import tools.jackson.core.json.JsonWriteFeature;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
@@ -28,6 +25,9 @@ import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
+
+    @Value("${spring.kafka.bootstrap-servers:127.0.0.1:9092}")
+    private String bootstrapServers;
 
     @Bean
     @Primary
@@ -38,9 +38,6 @@ public class KafkaConfig {
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) // 필드 불일치 시 에러 방지
                 .build();
     }
-
-    @Value("${spring.kafka.bootstrap-servers:127.0.0.1:9092}")
-    private String bootstrapServers;
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {

@@ -3,30 +3,31 @@ package com.hakyung.barleyssal_spring.infrastruture.kafka.events;
 import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.shared.DomainEvent;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
 public record OrderCreatedEvent(
         String orderId,
+        String userId,
         Instant occurredAt,
         String accountId,
         String stockCode,
         String orderSide,
         String orderType,
         String quantity,
-        BigDecimal limitPrice,
+        String limitPrice,
         Instant timestamp
 ) implements DomainEvent {
-    public static OrderCreatedEvent from(Order order) {
+    public static OrderCreatedEvent from(Order order, Long userId) {
         return new OrderCreatedEvent(
                 String.valueOf(order.getId()),
+                String.valueOf(userId),
                 Instant.now(),
                 String.valueOf(order.getAccountId()),
                 order.getStockCode().value(),
                 order.getOrderSide().name(),
                 order.getOrderType().name(),
                 String.valueOf(order.getQuantity()),
-                order.getLimitPrice(),
+                String.valueOf(order.getLimitPrice()),
                 Instant.now()
         );
     }

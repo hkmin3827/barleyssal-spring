@@ -5,5 +5,6 @@ public enum OrderStatus {
     SUBMITTED,  // Kafka 발행 완료
     FILLED,     // 체결 완료
     CANCELLED,
-    REJECTED
+    REJECTED,
+    EXPIRED
 }

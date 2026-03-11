@@ -16,7 +16,8 @@ import java.time.Instant;
 @Table(name = "orders", indexes = {
         @Index(name = "idx_orders_account_id", columnList = "account_id"),
         @Index(name = "idx_orders_status", columnList = "order_status"),
-        @Index(name = "idx_orders_stock_code", columnList = "stock_code")
+        @Index(name = "idx_orders_stock_code", columnList = "stock_code"),
+        @Index(name = "idx_orders_created_at", columnList = "createdAt")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -120,6 +121,13 @@ public class Order {
         this.orderStatus = OrderStatus.REJECTED;
         this.rejectReason = rejectReason;
         touch();
+    }
+
+    public void expire() {
+        if (this.orderStatus == OrderStatus.SUBMITTED || this.orderStatus == OrderStatus.PENDING) {
+            this.orderStatus = OrderStatus.EXPIRED;
+            touch();
+        }
     }
 
     private void requireStatus(OrderStatus... allowed) {
