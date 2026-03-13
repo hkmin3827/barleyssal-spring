@@ -79,8 +79,8 @@ spring:
 
   elasticsearch:
     uris: http://localhost:9200
-    connection-timeout: 10s
-    socket-timeout: 30s
+    connection-timeout: 5s
+    socket-timeout: 10s
     data:
       elasticsearch:
         repositories:

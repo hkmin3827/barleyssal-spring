@@ -6,15 +6,21 @@ import com.hakyung.barleyssal_spring.domain.order.OrderStatus;
 import com.hakyung.barleyssal_spring.global.exception.DataArchiveException;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.OrderHistoryDoc;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.OrderSearchRepository;
+import com.hakyung.barleyssal_spring.infrastruture.elastic.TradeStatsDoc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +33,7 @@ public class MarketCleanupScheduler {
     private final OrderRepository orderRepository;
     private final StringRedisTemplate redisTemplate;
     private final OrderSearchRepository orderSearchRepository;
+    private final ElasticsearchOperations esOps;
 
     @Transactional
     @Scheduled(cron = "0 0 0 * * *")
@@ -50,6 +57,23 @@ public class MarketCleanupScheduler {
         log.info("Redis Cleanup: Pending orders and metadata cleared");
     }
 
+    @Transactional
+    @Scheduled(cron = "0 30 0 * * *") // 매일 0시 30분 실행
+    public void cleanupOldElasticData() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(14);
+
+        Criteria criteria = new Criteria("timestamp").lessThan(threshold);
+
+        Query query = new CriteriaQuery(criteria);
+
+        DeleteQuery deleteQuery = DeleteQuery.builder(query)
+                .build();
+
+        esOps.delete(deleteQuery, OrderHistoryDoc.class);
+        esOps.delete(deleteQuery, TradeStatsDoc.class);
+        log.info("Elasticsearch: 14일 경과된 통계 데이터 삭제 완료");
+    }
+
     private void clearRedisKeys(String pattern) {
         Set<String> keys = redisTemplate.keys(pattern);
         if (keys != null && !keys.isEmpty()) {
@@ -57,8 +81,8 @@ public class MarketCleanupScheduler {
         }
     }
 
-    public void archiveAndDeleteOldOrders() {
-        Instant threshold = Instant.now().minus(3, ChronoUnit.DAYS);
+    private void archiveAndDeleteOldOrders() {
+        Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
         int batchSize = 1000;
 
         try{

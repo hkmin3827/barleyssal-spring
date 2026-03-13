@@ -63,10 +63,10 @@ public class OrderService {
         orderRepository.save(order);
 
         if (req.orderType() == OrderType.LIMIT) {
-            redisOrderRepository.saveLimitOrder(order, userId);
+            redisOrderRepository.saveLimitOrder(order, account.getUserId(), account.getUserName());
         }
 
-        orderEventProducer.publishOrderCreated(OrderCreatedEvent.from(order, userId));
+        orderEventProducer.publishOrderCreated(OrderCreatedEvent.from(order, userId, account.getUserName()));
         order.markSubmitted();
 
         redisAccountRepository.syncAccountToRedis(account);

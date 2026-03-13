@@ -10,6 +10,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Repository
@@ -22,10 +23,15 @@ public class RedisAccountRepository {
     /** 유저 계좌 정보 및 보유 주식 통합 캐싱 */
     public void syncAccountToRedis(Account account) {
         try {
+            Objects.requireNonNull(account.getId(), "accountId는 절대 null일 수 없습니다.");
+            Objects.requireNonNull(account.getDeposit(), "deposit은 절대 null일 수 없습니다.");
+            Objects.requireNonNull(account.getPrincipal(), "principal은 절대 null일 수 없습니다.");
+
             String statusKey = "account:status:" + account.getUserId();
             Map<String, String> statusData = new HashMap<>();
             statusData.put("deposit", account.getDeposit().toString());
             statusData.put("accountId", account.getId().toString());
+            statusData.put("userName", account.getUserName());
             statusData.put("principal", account.getPrincipal().toString());
             redisTemplate.opsForHash().putAll(statusKey, statusData);
 
@@ -54,11 +60,14 @@ public class RedisAccountRepository {
             for (Holding h : account.getHoldings()) {
                 if (h.getTotalQuantity() <= 0) continue;
                 try {
+                    Objects.requireNonNull(h.getAvgPrice(), "h.getAvgPrice는 절대 null일 수 없습니다.");
+                    Objects.requireNonNull(h.getTotalQuantity(), "h.getTotalQuantity는 절대 null일 수 없습니다.");
+
                     Map<String, Object> meta = new HashMap<>();
                     meta.put("avgPrice",         h.getAvgPrice().toString());
-                    meta.put("totalQuantity",     String.valueOf(h.getTotalQuantity()));
-                    meta.put("blockedQuantity",   String.valueOf(h.getBlockedQuantity() != null
-                            ? h.getBlockedQuantity() : 0));
+                    meta.put("totalQuantity",     h.getTotalQuantity().toString());
+                    meta.put("blockedQuantity",   h.getBlockedQuantity() != null
+                            ? h.getBlockedQuantity().toString() : "0");
                     String metaJson = objectMapper.writeValueAsString(meta);
                     redisTemplate.opsForHash().put(metaKey, h.getStockCode().value(), metaJson);
                 } catch (Exception e) {
@@ -68,7 +77,7 @@ public class RedisAccountRepository {
 
             log.debug("Account synced to Redis: userId={}", account.getUserId());
         } catch (Exception e) {
-            log.error("syncAccountToRedis failed");
+            log.error("syncAccountToRedis failed", e);
         }
     }
 }

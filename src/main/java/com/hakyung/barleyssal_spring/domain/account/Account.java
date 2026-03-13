@@ -32,6 +32,9 @@ public class Account {
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
+    @Column(name = "user_name", nullable = false)
+    private String userName;
+
     @Column(name = "principal", nullable = false, precision = 19, scale = 2)
     private BigDecimal principal = BigDecimal.ZERO;
 
@@ -47,9 +50,10 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Holding> holdings =new ArrayList<>();
 
-    public static Account create(Long userId, Money principal, String accountNumber) {
+    public static Account create(Long userId, String userName, Money principal, String accountNumber) {
         var acc = new Account();
         acc.userId = userId;
+        acc.userName = userName;
         acc.principal = principal.amount();
         acc.accountNumber = accountNumber;
         acc.deposit = principal.amount();

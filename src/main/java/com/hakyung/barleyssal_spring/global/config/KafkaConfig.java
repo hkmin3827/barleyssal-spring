@@ -8,17 +8,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
-import tools.jackson.core.StreamWriteFeature;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,16 +24,6 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     @Bean
-    @Primary
-    public ObjectMapper objectMapper() {
-        return JsonMapper.builder()
-                .findAndAddModules() // JavaTimeModule 등을 자동 등록 (Instant 처리에 필수)
-                .enable(StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN) // 0.0000001 유지
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) // 필드 불일치 시 에러 방지
-                .build();
-    }
-
-    @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> config = new HashMap<>();
 
@@ -47,7 +31,7 @@ public class KafkaConfig {
         // 실제 EC2 배포 시에는 환경변수로 관리 권장
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
         // 저사양 인프라 최적화: 배치 사이즈와 대기 시간 조절로 CPU/메모리 부하 감소
         config.put(ProducerConfig.BATCH_SIZE_CONFIG, 8192); // 16KB

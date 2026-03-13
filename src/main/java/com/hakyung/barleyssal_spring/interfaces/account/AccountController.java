@@ -25,7 +25,7 @@ public class AccountController {
     public ResponseEntity<AccountResponse> getMyAccount(
         @AuthenticationPrincipal CustomUserDetails user
     ) {
-        return ResponseEntity.ok(accountService.getOrCreateAccount(user.getId()));
+        return ResponseEntity.ok(accountService.getOrCreateAccount(user.getId(), user.getUserName()));
     }
 
     /** 원금 설정 */

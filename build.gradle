@@ -46,7 +46,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-session-data-redis'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-	implementation 'co.elastic.clients:elasticsearch-java:9.2.5'
+//	implementation 'co.elastic.clients:elasticsearch-java:9.2.5'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 

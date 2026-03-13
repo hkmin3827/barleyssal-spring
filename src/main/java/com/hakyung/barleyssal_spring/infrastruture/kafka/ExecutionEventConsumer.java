@@ -11,8 +11,10 @@ import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
+import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -20,9 +22,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * 체결 결과를 수신하여 DB(Order + Account) 를 원자적으로 업데이트
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class ExecutionEventConsumer {
     private final OrderRepository orderRepository;
     private final AccountRepository accountRepository;
     private final RedisAccountRepository redisAccountRepository;
+    private final RedisOrderRepository redisOrderRepository;
     private final ObjectMapper objectMapper;
     private final DlqService dlqService;
 
@@ -41,9 +41,9 @@ public class ExecutionEventConsumer {
             concurrency = "1"
     )
     public void onExecutionEvent(String message, Acknowledgment ack) {
-
+        ExecutionEvent event = null;
         try {
-            ExecutionEvent event = objectMapper.readValue(message, ExecutionEvent.class);
+            event = objectMapper.readValue(message, ExecutionEvent.class);
             log.info("Execution received: orderId={} price={} qty={}",
                     event.orderId(), event.executedPrice(), event.executedQuantity());
 
@@ -68,12 +68,17 @@ public class ExecutionEventConsumer {
 
             redisAccountRepository.syncAccountToRedis(account);
 
-            ack.acknowledge();
+            redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
 
+            ack.acknowledge();
             log.info("Asset updated: accountId={} symbol={} side={}", event.accountId(), event.stockCode(), event.orderSide());
         } catch (CustomException e) {
             log.error("데이터 에러 : ", e.getErrorCode());
             dlqService.sendToDlq("execution.event", message, e.getErrorCode().name(), "BUSINESS_ERROR");
+            if (event != null) {
+                redisOrderRepository.rollbackOrderToRedis(event);
+            }
+
             ack.acknowledge();
         } catch (TransientDataAccessException e) {
             log.error("일시적인 인프라 장애 발생 - 재시도 유도: {}", e.getMessage());

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
@@ -14,18 +15,24 @@ public class OrderEventProducer {
     public static final String TOPIC_ORDER_REQUEST = "order.request";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public void publishOrderCreated(OrderCreatedEvent event) {
-        kafkaTemplate.send(TOPIC_ORDER_REQUEST, event.orderId(), event)
-            .whenComplete((result, ex) -> {
-                if (ex != null) {
-                    log.error("Failed to publish OrderPlacedEvent: orderId={}", event.orderId(), ex);
-                } else {
-                    log.debug("OrderPlacedEvent published: orderId={} partition={} offset={}",
-                        event.orderId(),
-                        result.getRecordMetadata().partition(),
-                        result.getRecordMetadata().offset());
-                }
-            });
+        String payload = objectMapper.writeValueAsString(event);
+        try {
+            kafkaTemplate.send(TOPIC_ORDER_REQUEST, event.orderId(), payload)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Failed to publish OrderPlacedEvent: orderId={}", event.orderId(), ex);
+                        } else {
+                            log.debug("OrderPlacedEvent published: orderId={} partition={} offset={}",
+                                    event.orderId(),
+                                    result.getRecordMetadata().partition(),
+                                    result.getRecordMetadata().offset());
+                        }
+                    });
+        } catch (Exception e) {
+            log.error("Failed to serialize OrderCreatedEvent", e);
+        }
     }
 }

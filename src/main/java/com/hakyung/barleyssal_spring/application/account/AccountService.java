@@ -11,7 +11,6 @@ import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +22,15 @@ import java.util.*;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-    private final StringRedisTemplate redisTemplate;
     private final AccountNumberGenerator accountNumberGenerator;
     private final RedisAccountRepository redisAccountRepository;
 
     @Transactional
-    public AccountResponse getOrCreateAccount(Long userId) {
+    public AccountResponse getOrCreateAccount(Long userId, String userName) {
         Account account =  accountRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     String newAccountNumber = accountNumberGenerator.generate();
-                    var newAccount = Account.create(userId, Money.of(0L), newAccountNumber);
+                    var newAccount = Account.create(userId, userName, Money.of(0L), newAccountNumber);
                     return accountRepository.save(newAccount);
                 });
 

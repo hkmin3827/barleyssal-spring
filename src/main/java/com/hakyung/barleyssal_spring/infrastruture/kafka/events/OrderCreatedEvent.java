@@ -8,6 +8,7 @@ import java.time.Instant;
 public record OrderCreatedEvent(
         String orderId,
         String userId,
+        String userName,
         Instant occurredAt,
         String accountId,
         String stockCode,
@@ -17,17 +18,18 @@ public record OrderCreatedEvent(
         String limitPrice,
         Instant timestamp
 ) implements DomainEvent {
-    public static OrderCreatedEvent from(Order order, Long userId) {
+    public static OrderCreatedEvent from(Order order, Long userId, String userName) {
         return new OrderCreatedEvent(
                 String.valueOf(order.getId()),
                 String.valueOf(userId),
+                userName,
                 Instant.now(),
                 String.valueOf(order.getAccountId()),
                 order.getStockCode().value(),
                 order.getOrderSide().name(),
                 order.getOrderType().name(),
                 String.valueOf(order.getQuantity()),
-                String.valueOf(order.getLimitPrice()),
+                order.getLimitPrice() != null ? order.getLimitPrice().toString() : "",
                 Instant.now()
         );
     }
