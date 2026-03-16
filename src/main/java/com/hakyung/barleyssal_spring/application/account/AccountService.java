@@ -31,10 +31,11 @@ public class AccountService {
                 .orElseGet(() -> {
                     String newAccountNumber = accountNumberGenerator.generate();
                     var newAccount = Account.create(userId, userName, Money.of(0L), newAccountNumber);
-                    return accountRepository.save(newAccount);
+                    accountRepository.save(newAccount);
+                    redisAccountRepository.syncAccountToRedis(newAccount);
+                    return newAccount;
                 });
 
-        redisAccountRepository.syncAccountToRedis(account);
         return AccountResponse.from(account);
     }
 
