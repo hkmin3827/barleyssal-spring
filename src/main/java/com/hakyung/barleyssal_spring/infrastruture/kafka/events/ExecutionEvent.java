@@ -14,5 +14,5 @@ public record ExecutionEvent(
     String orderSide,
     String executedQuantity,
     BigDecimal executedPrice,
-    Instant timestamp
+    Long timestamp
 ) {}

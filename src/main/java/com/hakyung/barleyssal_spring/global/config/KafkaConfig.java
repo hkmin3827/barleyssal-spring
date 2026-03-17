@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
@@ -65,6 +66,8 @@ public class KafkaConfig {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(1);
+
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
     }
 
@@ -74,7 +77,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public NewTopic orderCreatedTopic() {
+    public NewTopic orderRequestTopic() {
         return TopicBuilder.name("order.request")
                 .partitions(1)
                 .replicas(1)
@@ -88,6 +91,14 @@ public class KafkaConfig {
                 .partitions(1)
                 .replicas(1)
                 .config("retention.ms", "3600000") // 통계 서버가 가져가면 바로 지워지도록 1시간으로 설정 (디스크 절약)
+                .build();
+    }
+
+    @Bean
+    public NewTopic dlqTopic() {
+        return TopicBuilder.name("service-common-dlq")
+                .partitions(1)
+                .replicas(1)
                 .build();
     }
 

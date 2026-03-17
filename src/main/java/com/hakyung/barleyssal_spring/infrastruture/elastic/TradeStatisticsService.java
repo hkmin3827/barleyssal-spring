@@ -1,11 +1,13 @@
 package com.hakyung.barleyssal_spring.infrastruture.elastic;
 
 import com.hakyung.barleyssal_spring.domain.user.UserRepository;
+import com.hakyung.barleyssal_spring.global.utils.TimeConverter;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -21,7 +23,6 @@ public class TradeStatisticsService {
     private final TradeStatsRepository tradeStatsRepository; // 상위 추상화 (Repository)
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final UserRepository userRepository;
 
     @jakarta.annotation.PostConstruct
     public void checkBean() {
@@ -32,7 +33,7 @@ public class TradeStatisticsService {
             topics = "execution.event",
             groupId = "barleyssal-stats-group"
     )
-    public void processTradeStats(String message) {
+    public void processTradeStats(String message, Acknowledgment ack) {
         try {
             log.info("▶▶▶▶▶ [KAFKA 수신 성공] raw message: {}", message);
 
@@ -49,11 +50,13 @@ public class TradeStatisticsService {
                     event.executedPrice().doubleValue(),
                     Long.valueOf(event.executedQuantity()),
                     calculateProfitRate(event),
-                    LocalDateTime.now()
+                    TimeConverter.toLocalDateTime(event.timestamp())
             );
 
             tradeStatsRepository.save(stats);
             log.info("▶▶▶▶▶ [ES 저장 완료]");
+
+            ack.acknowledge();
             log.debug("TradeStatsDoc indexed: stockCode={} side={}", event.stockCode(), event.orderSide());
         } catch (Exception e) {
             log.error("▶▶▶▶▶ [에러] 데이터 처리 중 예외 발생", e);

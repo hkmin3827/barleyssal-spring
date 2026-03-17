@@ -82,7 +82,7 @@ public class MarketCleanupScheduler {
     }
 
     private void archiveAndDeleteOldOrders() {
-        Instant threshold = Instant.now().minus(1, ChronoUnit.DAYS);
+        Instant threshold = Instant.now().minus(3, ChronoUnit.DAYS);
         int batchSize = 1000;
 
         try{

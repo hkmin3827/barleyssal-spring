@@ -5,6 +5,7 @@ import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
 import com.hakyung.barleyssal_spring.domain.order.Order;
+import com.hakyung.barleyssal_spring.domain.order.OrderRejectReason;
 import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
 import com.hakyung.barleyssal_spring.domain.order.OrderSide;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
@@ -14,13 +15,14 @@ import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Component
@@ -50,15 +52,27 @@ public class ExecutionEventConsumer {
             Order order = orderRepository.findById(Long.valueOf(event.orderId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
+            Account account = accountRepository.findById(Long.valueOf(event.accountId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+
             Money execPrice = Money.of(event.executedPrice());
+            BigDecimal totalExecAmount = event.executedPrice().multiply(BigDecimal.valueOf(Integer.valueOf(event.executedQuantity())));
+
+            if (OrderSide.BUY.name().equals(event.orderSide()) && totalExecAmount.compareTo(account.getDeposit()) > 0) {
+                log.error("체결 금액({})이 예수금({})보다 큽니다. 주문 번호: {}", totalExecAmount, account.getDeposit(), order.getId());
+                order.reject(OrderRejectReason.INSUFFICIENT_FUNDS);
+                orderRepository.save(order);
+
+                redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
+                ack.acknowledge();
+                return;
+            }
 
             order.fill(execPrice, Long.valueOf(event.executedQuantity()));
             orderRepository.save(order);
 
-            Account account = accountRepository.findById(Long.valueOf(event.accountId()))
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
-
             StockCode symbol = StockCode.of(event.stockCode());
+
             if (OrderSide.BUY.name().equals(event.orderSide())) {
                 account.processBuy(symbol, Long.valueOf(event.executedQuantity()), execPrice);
             } else {

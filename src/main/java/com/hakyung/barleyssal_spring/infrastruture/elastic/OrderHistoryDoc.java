@@ -1,6 +1,7 @@
 package com.hakyung.barleyssal_spring.infrastruture.elastic;
 
 import com.hakyung.barleyssal_spring.domain.order.Order;
+import com.hakyung.barleyssal_spring.global.utils.TimeConverter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
@@ -40,7 +41,7 @@ public record OrderHistoryDoc(
                 order.getExecutedQuantity(),
                 String.valueOf(order.getCreatedAt()),
                 order.getRejectReason() != null ? order.getRejectReason().name() : null,
-                LocalDateTime.now()
+                TimeConverter.now()
         );
     }
 }

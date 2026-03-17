@@ -45,6 +45,7 @@ public class Holding {
         h.stockCode = code;
         h.totalQuantity = quantity;
         h.avgPrice = price.amount();
+        h.blockedQuantity = 0L;
         return h;
     }
 

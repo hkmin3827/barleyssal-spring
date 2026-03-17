@@ -49,8 +49,8 @@ public class RedisAccountRepository {
 
             });
 
-            String userIdKey = "account:userId:" + account.getId();
-            redisTemplate.opsForValue().set(userIdKey, String.valueOf(account.getUserId()));
+//            String userIdKey = "account:userId:" + account.getId();
+//            redisTemplate.opsForValue().set(userIdKey, String.valueOf(account.getUserId()));
 
             // ── [추가 2] holdings 메타 (avgPrice + totalQuantity) ────────
             // Node.js PnL 실시간 계산에 사용
