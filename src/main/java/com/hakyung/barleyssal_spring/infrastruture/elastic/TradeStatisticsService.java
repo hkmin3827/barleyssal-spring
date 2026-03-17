@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.infrastruture.elastic;
 
-import com.hakyung.barleyssal_spring.domain.user.UserRepository;
 import com.hakyung.barleyssal_spring.global.utils.TimeConverter;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Slf4j
