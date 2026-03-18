@@ -1,13 +1,11 @@
 package com.hakyung.barleyssal_spring.infrastruture.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hakyung.barleyssal_spring.domain.account.Account;
 import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
-import com.hakyung.barleyssal_spring.domain.order.Order;
-import com.hakyung.barleyssal_spring.domain.order.OrderRejectReason;
-import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
-import com.hakyung.barleyssal_spring.domain.order.OrderSide;
+import com.hakyung.barleyssal_spring.domain.order.*;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-import java.math.BigDecimal;
 
 @Slf4j
 @Component
@@ -42,12 +39,10 @@ public class ExecutionEventConsumer {
             groupId     = "barleyssal-spring",
             concurrency = "1"
     )
-    public void onExecutionEvent(String message, Acknowledgment ack) {
+    public void onExecutionEvent(String message, Acknowledgment ack) throws JsonProcessingException {
         ExecutionEvent event = null;
         try {
             event = objectMapper.readValue(message, ExecutionEvent.class);
-            log.info("Execution received: orderId={} price={} qty={}",
-                    event.orderId(), event.executedPrice(), event.executedQuantity());
 
             Order order = orderRepository.findById(Long.valueOf(event.orderId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
@@ -55,44 +50,48 @@ public class ExecutionEventConsumer {
             Account account = accountRepository.findById(Long.valueOf(event.accountId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-            Money execPrice = Money.of(event.executedPrice());
-            BigDecimal totalExecAmount = event.executedPrice().multiply(BigDecimal.valueOf(Integer.valueOf(event.executedQuantity())));
 
-            if (OrderSide.BUY.name().equals(event.orderSide()) && totalExecAmount.compareTo(account.getDeposit()) > 0) {
-                log.error("체결 금액({})이 예수금({})보다 큽니다. 주문 번호: {}", totalExecAmount, account.getDeposit(), order.getId());
-                order.reject(OrderRejectReason.INSUFFICIENT_FUNDS);
-                orderRepository.save(order);
-
-                redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
-                ack.acknowledge();
-                return;
-            }
-
-            order.fill(execPrice, Long.valueOf(event.executedQuantity()));
-            orderRepository.save(order);
-
-            StockCode symbol = StockCode.of(event.stockCode());
+            StockCode code = StockCode.of(event.stockCode());
+            long qty = Long.parseLong(event.executedQuantity());
 
             if (OrderSide.BUY.name().equals(event.orderSide())) {
-                account.processBuy(symbol, Long.valueOf(event.executedQuantity()), execPrice);
+                account.unblockDeposit(Money.of(order.getBlockedDeposit()));
             } else {
-                account.processSell(symbol, Long.valueOf(event.executedQuantity()), execPrice);
+                account.unblockHolding(code, Long.parseLong(event.executedQuantity()));
             }
+
+            if ("CANCELLED".equals(event.executionStatus())) {
+                order.cancel();
+                log.warn("Order CANCELLED: orderId={}", order.getId());
+            } else {
+                Money execPrice = Money.of(event.executedPrice());
+
+                order.fill(execPrice, qty);
+
+                if (OrderSide.BUY.name().equals(event.orderSide())) {
+                    account.processBuy(code, qty, execPrice);
+                } else {
+                    account.processSell(code, qty, execPrice);
+                }
+            }
+
+            orderRepository.save(order);
             accountRepository.save(account);
 
             redisAccountRepository.syncAccountToRedis(account);
 
-            redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
+            if(OrderType.LIMIT.name().equals(event.orderType())) {
+                redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
+            }
 
             ack.acknowledge();
             log.info("Asset updated: accountId={} symbol={} side={}", event.accountId(), event.stockCode(), event.orderSide());
         } catch (CustomException e) {
-            log.error("데이터 에러 : ", e.getErrorCode());
+            log.error("데이터 에러 : {}", e.getErrorCode());
             dlqService.sendToDlq("execution.event", message, e.getErrorCode().name(), "BUSINESS_ERROR");
             if (event != null) {
                 redisOrderRepository.rollbackOrderToRedis(event);
             }
-
             ack.acknowledge();
         } catch (TransientDataAccessException e) {
             log.error("일시적인 인프라 장애 발생 - 재시도 유도: {}", e.getMessage());

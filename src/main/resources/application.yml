@@ -20,7 +20,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        jdbc.batch_size: 50 # 쓰기 성능 최적화
+        jdbc.batch_size: 50
         query.fail_on_pagination_over_collection_fetch: true
         show_sql: true
     open-in-view: true
@@ -45,7 +45,7 @@ spring:
       timeout: 3000ms
       lettuce:
         pool:
-          # 가상 스레드가 Redis를 동시에 호출할 때를 대비해 풀 크기를 약간 늘립니다.
+          # 가상 스레드가 Redis를 동시에 호출할 때를 대비해 풀 크기를 약간 늘림
           max-active: 20
           max-idle: 10
           min-idle: 5

@@ -11,7 +11,9 @@ import com.hakyung.barleyssal_spring.application.auth.service.password.PasswordR
 import com.hakyung.barleyssal_spring.domain.user.User;
 import com.hakyung.barleyssal_spring.global.jwt.JwtProvider;
 import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
+import com.hakyung.barleyssal_spring.global.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -54,7 +54,11 @@ public class AuthController {
 
         AuthResponse response = AuthResponse.from(userDetails);
 
-        log.info("JWT Issued & Session Stored: userId={}, token={}", userDetails.getId(), accessToken);
+        CsrfToken csrfToken = (CsrfToken) req.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            csrfToken.getToken();
+        }
+
         return ResponseEntity.ok(response);
     }
 
@@ -69,25 +73,29 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest req) {
+    public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
         HttpSession session = req.getSession(false);
         if (session != null) {
-            session.invalidate(); // Redis에서 세션 삭제
+            session.invalidate();
         }
+
+        CookieUtil.clearAuthCookies(res);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<Void> withdraw(
             @Valid @RequestBody WithdrawRequest withdrawReq, HttpServletRequest req,
-            @AuthenticationPrincipal CustomUserDetails user) {
+            HttpServletResponse res, @AuthenticationPrincipal CustomUserDetails user) {
 
         authService.withdraw(user.getId(), withdrawReq);
 
         HttpSession session = req.getSession(false);
         if (session != null) {
-            session.invalidate(); // Redis에서 세션 삭제
+            session.invalidate();
         }
+
+        CookieUtil.clearAuthCookies(res);
 
         return ResponseEntity.noContent().build();
     }
@@ -108,6 +116,15 @@ public class AuthController {
                 req.resetToken(),
                 req.newPassword()
         );
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/csrf")
+    public ResponseEntity<Void> getCsrfToken(HttpServletRequest req) {
+        CsrfToken csrfToken = (CsrfToken) req.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            csrfToken.getToken();
+        }
         return ResponseEntity.ok().build();
     }
 }

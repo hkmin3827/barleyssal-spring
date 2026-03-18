@@ -67,6 +67,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderRejectReason rejectReason;
 
+    @Column(name = "blocked_deposit", precision = 19, scale = 2)
+    private BigDecimal blockedDeposit;   // 시장가 고가 기준 필요한 예수금
+
     @Version
     private Long version;
 
@@ -76,7 +79,8 @@ public class Order {
             OrderSide side,
             OrderType type,
             long qty,
-            Money limitPrice
+            Money limitPrice,
+            Money blockedDeposit
     ) {
         var o = new Order();
         o.accountId = accountId;
@@ -89,6 +93,7 @@ public class Order {
         o.executedQuantity = 0L;
         o.createdAt = Instant.now();
         o.updatedAt = Instant.now();
+        o.blockedDeposit = blockedDeposit != null ? blockedDeposit.amount() : BigDecimal.ZERO;
         return o;
     }
 

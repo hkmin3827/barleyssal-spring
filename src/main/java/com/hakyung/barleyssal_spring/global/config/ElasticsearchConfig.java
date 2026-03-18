@@ -33,7 +33,6 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
     @Override
     public JacksonJsonpMapper jsonpMapper() {
-        // 주식 데이터(BigDecimal) 및 시간 처리를 위한 최적화된 매퍼 구성
         ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

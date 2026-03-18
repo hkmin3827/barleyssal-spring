@@ -20,7 +20,7 @@ public class MailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(email);
-        message.setSubject("Flowerable 비밀번호 재설정");
+        message.setSubject("보리쌀 모의투자 플랫폼 비밀번호 재설정");
         message.setText(
                 "아래 링크를 클릭하여 비밀번호를 재설정하세요.\n\n"
                         + resetUrl

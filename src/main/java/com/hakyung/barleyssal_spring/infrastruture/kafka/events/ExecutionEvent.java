@@ -12,7 +12,9 @@ public record ExecutionEvent(
     String accountId,
     String stockCode,
     String orderSide,
+    String orderType,
     String executedQuantity,
     BigDecimal executedPrice,
-    Long timestamp
+    Long timestamp,
+    String executionStatus
 ) {}

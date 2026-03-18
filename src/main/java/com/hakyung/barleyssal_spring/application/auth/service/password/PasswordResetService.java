@@ -22,7 +22,7 @@ public class PasswordResetService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserRepository userRepository;
     private final MailService mailService;
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.frontend.base-url}")
     private String baseUrl;

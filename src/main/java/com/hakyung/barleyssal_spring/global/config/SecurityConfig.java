@@ -38,7 +38,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(requestHandler) // 이 부분 추가
+                        .csrfTokenRequestHandler(requestHandler)
                         .ignoringRequestMatchers("/api/v1/auth/**")
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -50,7 +50,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/v1/stats/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/users/**", "/api/v1/orders/**", "/api/v1/accounts/**").authenticated()
+                        .requestMatchers("/api/v1/users/**", "/api/v1/orders/**", "/api/v1/accounts/**", "/api/v1/watchlist/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

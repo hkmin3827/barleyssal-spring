@@ -94,8 +94,16 @@ public class Account {
         touch();
     }
 
-    public boolean canBuy(long qty, Money price) {
-        return Money.of(this.deposit).isGreaterThanOrEqual(price.multiply(qty));
+    public void blockDeposit(Money amount) {
+        if (!canBuy(amount)) {
+            throw new CustomException(ErrorCode.INSUFFICIENT_DEPOSIT);
+        }
+        this.deposit = Money.of(this.deposit).subtract(amount).amount();
+        touch();
+    }
+
+    public boolean canBuy(Money amount) {
+        return Money.of(this.deposit).isGreaterThanOrEqual(amount);
     }
 
     public boolean canSell(StockCode code, long qty) {

@@ -17,13 +17,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     String findUserNameById(Long id);
 
     @Query("""
-    select 
+    select
             u.id as id,
             u.email as email,
             u.userName as userName,
             u.active as active
         from User u
         where u.role = com.hakyung.barleyssal_spring.domain.user.Role.ROLE_USER
+            and u.active = :active
         order by u.createdAt asc
     """)
     Page<UsersListResponse> findUsersByActive(@Param("active") boolean active, Pageable pageable);

@@ -4,6 +4,7 @@ import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
 import com.hakyung.barleyssal_spring.domain.order.OrderStatus;
 import com.hakyung.barleyssal_spring.global.exception.DataArchiveException;
+import com.hakyung.barleyssal_spring.global.exception.DataCleanupException;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.OrderHistoryDoc;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.OrderSearchRepository;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.TradeStatsDoc;
@@ -21,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -47,10 +50,17 @@ public class MarketCleanupScheduler {
         log.info("DB Cleanup: {} orders marked as EXPIRED", expiredCount);
 
         try {
-            archiveAndDeleteOldOrders();
+            syncYesterdayOrdersToElastic();
         } catch (Exception e) {
-            log.error("Critical: Archive process failed but DB status update is kept.", e);
+            log.error("Critical: Archive process failed. : {}", e.getMessage());
         }
+
+        try {
+            deleteOldOrders();
+        } catch (Exception e) {
+            log.error("Critical: DB Old orders deletion failed. : {}", e.getMessage());
+        }
+
         clearRedisKeys("orders:pending:*");
         clearRedisKeys("order:meta:*");
         
@@ -58,7 +68,7 @@ public class MarketCleanupScheduler {
     }
 
     @Transactional
-    @Scheduled(cron = "0 30 0 * * *") // 매일 0시 30분 실행
+    @Scheduled(cron = "0 30 0 * * *")
     public void cleanupOldElasticData() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(14);
 
@@ -81,9 +91,46 @@ public class MarketCleanupScheduler {
         }
     }
 
-    private void archiveAndDeleteOldOrders() {
+    private void syncYesterdayOrdersToElastic() {
+        ZoneId zoneId = ZoneId.of("Asia/Seoul");
+        ZonedDateTime nowKst = ZonedDateTime.now(zoneId);
+        Instant startOfYesterday = nowKst.minusDays(1).truncatedTo(ChronoUnit.DAYS).toInstant();
+        Instant startOfToday = nowKst.truncatedTo(ChronoUnit.DAYS).toInstant();
+
+        long lastId = 0L;
+        int batchSize = 1000;
+        int totalSynced = 0;
+
+        try {
+            while (true) {
+                List<Order> orders = orderRepository.findTop1000ByIdGreaterThanAndCreatedAtBetweenOrderByIdAsc(
+                        lastId, startOfYesterday, startOfToday
+                );
+
+                if (orders.isEmpty()) break;
+
+                List<OrderHistoryDoc> docs = orders.stream()
+                        .map(OrderHistoryDoc::from)
+                        .toList();
+
+                orderSearchRepository.saveAll(docs);
+                totalSynced += docs.size();
+
+                lastId = orders.get(orders.size() - 1).getId();
+
+                if (orders.size() < batchSize) break;
+            }
+            log.info("Elasticsearch Sync Complete: {} yesterday's orders synced.", totalSynced);
+        } catch (Exception e) {
+            log.error("Elasticsearch Sync Failed: {} ", e.getMessage());
+            throw new DataArchiveException("Elasticsearch 주문 데이터 동기화 실패", e.getCause());
+        }
+    }
+
+    private void deleteOldOrders() {
         Instant threshold = Instant.now().minus(3, ChronoUnit.DAYS);
         int batchSize = 1000;
+        int totalDeleted = 0;
 
         try{
             while (true) {
@@ -91,19 +138,15 @@ public class MarketCleanupScheduler {
 
                 if (orders.isEmpty()) break;
 
-                List<OrderHistoryDoc> docs = orders.stream()
-                        .map(OrderHistoryDoc::from)
-                        .toList();
-                orderSearchRepository.saveAll(docs);
-
                 orderRepository.deleteAllInBatch(orders);
-
-                log.info("Archived and deleted {} orders...", orders.size());
+                totalDeleted += orders.size();
 
                 if (orders.size() < batchSize) break;
             }
+            log.info("DB Cleanup Complete: {} orders older than 3 days deleted.", totalDeleted);
         } catch (Exception e) {
-            throw new DataArchiveException(e.getMessage(), e.getCause());
+            log.error("DB Cleanup Failed: 3일 경과 주문 데이터 삭제 중 에러 발생. 진행된 삭제 건수: {}", totalDeleted, e);
+            throw new DataCleanupException("오래된 주문 DB 삭제 실패", e);
         }
     }
 }

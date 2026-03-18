@@ -20,7 +20,6 @@ public class RedisAccountRepository {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    /** 유저 계좌 정보 및 보유 주식 통합 캐싱 */
     public void syncAccountToRedis(Account account) {
         try {
             Objects.requireNonNull(account.getId(), "accountId는 절대 null일 수 없습니다.");
@@ -35,10 +34,8 @@ public class RedisAccountRepository {
             statusData.put("principal", account.getPrincipal().toString());
             redisTemplate.opsForHash().putAll(statusKey, statusData);
 
-            // 2. 보유 종목 및 매도 가능 수량 (Hash)
             String holdingKey = "account:holdings:" + account.getUserId();
-            redisTemplate.delete(holdingKey); // 초기화 후 재등록
-
+            redisTemplate.delete(holdingKey);
 
             account.getHoldings().forEach(h -> {
                 long sellable = h.getTotalQuantity() - h.getBlockedQuantity();
@@ -49,11 +46,6 @@ public class RedisAccountRepository {
 
             });
 
-//            String userIdKey = "account:userId:" + account.getId();
-//            redisTemplate.opsForValue().set(userIdKey, String.valueOf(account.getUserId()));
-
-            // ── [추가 2] holdings 메타 (avgPrice + totalQuantity) ────────
-            // Node.js PnL 실시간 계산에 사용
             String metaKey = "account:holdings:meta:" + account.getUserId();
             redisTemplate.delete(metaKey);
 
@@ -77,7 +69,7 @@ public class RedisAccountRepository {
 
             log.debug("Account synced to Redis: userId={}", account.getUserId());
         } catch (Exception e) {
-            log.error("syncAccountToRedis failed", e);
+            log.error("syncAccountToRedis failed : {}", e.getMessage());
         }
     }
 }

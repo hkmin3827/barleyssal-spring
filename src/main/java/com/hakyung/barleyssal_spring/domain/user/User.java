@@ -44,13 +44,6 @@ public class User {
     @Column(nullable = true)
     private LocalDateTime deletedAt;
 
-    private User(String email, String password, String userName) {
-        this.email = email;
-        this.encodedPassword = password;
-        this.userName = userName;
-        this.role = Role.ROLE_USER;
-        this.createdAt = LocalDateTime.now();
-    }
 
     public static User of(SignupRequest req, String encodedPassword) {
         User user = new User();
@@ -63,7 +56,6 @@ public class User {
         user.active = true;
         return user;
     }
-
 
     public void updateProfile(String userName, String phoneNumber) {
         this.userName = userName;

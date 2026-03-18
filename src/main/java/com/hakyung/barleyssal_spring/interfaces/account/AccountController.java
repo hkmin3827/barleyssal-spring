@@ -20,7 +20,6 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    /** 내 계좌 조회 */
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getMyAccount(
         @AuthenticationPrincipal CustomUserDetails user
@@ -28,7 +27,6 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getOrCreateAccount(user.getId(), user.getUserName()));
     }
 
-    /** 원금 설정 */
     @PutMapping("/set-principal")
     public ResponseEntity<AccountResponse> setPrincipal(
         @AuthenticationPrincipal CustomUserDetails user,
@@ -37,7 +35,6 @@ public class AccountController {
         return ResponseEntity.ok(accountService.setPrincipal(user.getId(), req));
     }
 
-    /** 보유 종목 리스트 */
     @GetMapping("/me/holdings")
     public ResponseEntity<List<HoldingResponse>> getHoldings(
         @AuthenticationPrincipal CustomUserDetails user

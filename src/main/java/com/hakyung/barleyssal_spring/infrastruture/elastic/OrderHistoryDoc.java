@@ -8,7 +8,6 @@ import org.springframework.data.elasticsearch.annotations.*;
 import java.time.LocalDateTime;
 
 
-// 하루 지난 데이터들만 저장. 14일간
 @Document(indexName = "order-history")
 @Setting(shards = 1, replicas = 0)
 public record OrderHistoryDoc(

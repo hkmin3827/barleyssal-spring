@@ -11,11 +11,11 @@ import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
     private final Long userId;
-    private final String email;      // 추가
+    private final String email;
     private final String userName;
-    private final String password; // 추가: DB의 인코딩된 비밀번호
+    private final String password; // DB - encodedPassword
     private final Role role;
-    private final boolean active;   // 추가: 활성화 여부
+    private final boolean active;
     private final boolean deleted;
 
     public CustomUserDetails(User user) {
@@ -38,7 +38,7 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return userId.toString();
     }
-    @Override public String getPassword() { return password; } // 필드 반환
+    @Override public String getPassword() { return password; }
 
     @Override
     public boolean isEnabled() {

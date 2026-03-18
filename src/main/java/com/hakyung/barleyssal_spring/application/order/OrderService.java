@@ -15,6 +15,7 @@ import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.OrderEventProducer;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.OrderCreatedEvent;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
+import com.hakyung.barleyssal_spring.infrastruture.redis.RedisMarketRepository;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,31 +35,52 @@ public class OrderService {
     private final OrderEventProducer orderEventProducer;
     private final RedisOrderRepository redisOrderRepository;
     private final RedisAccountRepository redisAccountRepository;
+    private final RedisMarketRepository redisMarketRepository;
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest req) {
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-        req.validateLimitPrice();
-
         StockCode code = StockCode.of(req.stockCode());
         Money limitPrice = req.limitPrice() != null ?  Money.of(req.limitPrice()) : null;
+        Money blockedDeposit = Money.ZERO;
+
+        String marketCode = redisMarketRepository.getMarketOperationCode(code.value());
+        if (marketCode != null && !marketCode.startsWith("2")) {
+            throw new CustomException(ErrorCode.MARKET_CLOSED);
+        }
 
         switch (req.orderSide()) {
-            case BUY -> validateBuy(account, req.quantity(), limitPrice, req.orderType());
+            case BUY -> {
+                if (req.orderType() == OrderType.LIMIT) {
+                    req.validateLimitPrice();
+                    blockedDeposit = limitPrice.multiply(req.quantity());
+            } else {
+                    Double highPrice = redisMarketRepository.getHighPrice(code.value());
+                    Double currentPrice = redisMarketRepository.getCurrentPrice(code.value());
+
+                    double safePrice = (highPrice != null && highPrice > currentPrice)
+                            ? highPrice : (currentPrice * 1.3);
+
+                    blockedDeposit = Money.of(BigDecimal.valueOf(safePrice)).multiply(req.quantity());
+                }
+                account.blockDeposit(blockedDeposit);
+            }
             case SELL -> {
                 validateSell(account, code, req.quantity());
                 account.blockHolding(code, req.quantity());
             }
         }
+
         Order order = Order.create(
                 account.getId(),
                 code,
                 req.orderSide(),
                 req.orderType(),
                 req.quantity(),
-                limitPrice
+                limitPrice,
+                blockedDeposit
         );
         orderRepository.save(order);
 
@@ -85,8 +107,7 @@ public class OrderService {
         order.cancel();
 
         if (order.getOrderSide() == OrderSide.BUY) {
-            Money refundAmount = Money.of(order.getLimitPrice().multiply(BigDecimal.valueOf(order.getQuantity())));
-            account.unblockDeposit(refundAmount);
+            account.unblockDeposit(Money.of(order.getBlockedDeposit()));
         } else {
             account.unblockHolding(order.getStockCode(), order.getQuantity());
         }
@@ -113,11 +134,6 @@ public class OrderService {
         return orderRepository.findById(orderId)
                 .map(OrderResponse::from)
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-    }
-
-    private void validateBuy(Account account, long qty, Money limitPrice, OrderType type) {
-        if (type == OrderType.LIMIT && !account.canBuy(qty, limitPrice))
-            throw new CustomException(ErrorCode.INSUFFICIENT_DEPOSIT);
     }
 
     private void validateSell(Account account, StockCode code, long qty) {

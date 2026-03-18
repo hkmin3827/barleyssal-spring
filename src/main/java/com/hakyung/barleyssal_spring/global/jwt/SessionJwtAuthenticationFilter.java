@@ -37,6 +37,7 @@ public class SessionJwtAuthenticationFilter extends OncePerRequestFilter {
 
         return uri.equals("/api/v1/auth/login")
                 || uri.equals("/api/v1/auth/signup")
+                || uri.equals("/api/v1/auth/csrf")
                 || uri.startsWith("/api/v1/stats")
                 || uri.startsWith("/swagger")
                 || uri.startsWith("/v3/api-docs")

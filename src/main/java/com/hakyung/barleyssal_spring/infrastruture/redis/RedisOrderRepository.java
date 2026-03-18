@@ -41,6 +41,7 @@ public class RedisOrderRepository {
         metadata.put("stockCode", order.getStockCode().value());
         metadata.put("quantity", String.valueOf(order.getQuantity()));
         metadata.put("orderSide", order.getOrderSide().name());
+        metadata.put("orderType", order.getOrderType().name());
         metadata.put("limitPrice", order.getLimitPrice().toString());
 
         redisTemplate.opsForHash().putAll(hashKey, metadata);

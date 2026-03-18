@@ -56,13 +56,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(errorCode), errorCode.getHttpStatus());
     }
 
-
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex){
         ErrorCode code = ex.getErrorCode();
-
         ErrorResponse res = new ErrorResponse(code);
-
         return  new ResponseEntity<>(res, code.getHttpStatus());
     }
 

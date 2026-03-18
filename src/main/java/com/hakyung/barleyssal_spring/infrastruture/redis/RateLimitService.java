@@ -23,5 +23,4 @@ public class RateLimitService {
 
         return count != null && count <= maxRequests;
     }
-
 }

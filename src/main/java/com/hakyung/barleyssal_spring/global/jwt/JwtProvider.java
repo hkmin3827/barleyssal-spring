@@ -24,24 +24,23 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
     }
 
-
     public String createAccessToken(Long userId, Role role) {
         long expiration = jwtProperties.expiration();
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                .header().add("typ", "JWT").and() // 헤더 설정 권장
+                .header().add("typ", "JWT").and()
                 .id(generateCompactId())
-                .subject(String.valueOf(userId)) // setSubject -> subject
+                .subject(String.valueOf(userId))
                 .claim("role", role.name())
-                .issuedAt(new Date(now)) // setIssuedAt -> issuedAt
-                .expiration(new Date(now + expiration)) // setExpiration -> expiration
-                .signWith(key) // 알고리즘 명시 없이 Key만 전달해도 자동으로 HS256 이상 적용
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expiration))
+                .signWith(key)
                 .compact();
     }
 
     private String generateCompactId() {
-        byte[] randomBytes = new byte[9]; // 9바이트면 Base64 변환 시 12글자가 됨
+        byte[] randomBytes = new byte[9]; // Base64 변환 시 12글자
         secureRandom.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }

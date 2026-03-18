@@ -30,7 +30,9 @@ public enum ErrorCode {
     INVALID_EXECUTED_QUANTITY(HttpStatus.CONFLICT, "주문 매도 수량보다 매도 수량이 큽니다. 관리자 확인이 필요합니다."),
     INVALID_PRINCIPAL_UNIT(HttpStatus.BAD_REQUEST, "원금은 10원 단위로 입력해야합니다."),
     INVALID_REQUEST_QUANTITY(HttpStatus.CONFLICT, "주문했던 주식 수가 취소 요청한 수보다 작습니다. 관리자 확인이 필요합니다."),
-    ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리되었거나 변경된 주문입니다.");
+    ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리되었거나 변경된 주문입니다."),
+    MARKET_CLOSED(HttpStatus.BAD_REQUEST, "장 운영 시간이 아닙니다."),
+    WATCHLIST_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "관심종목은 최대 40개까지 등록할 수 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

@@ -4,11 +4,12 @@ import com.hakyung.barleyssal_spring.global.utils.TimeConverter;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,9 +19,9 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class TradeStatisticsService {
-    private final TradeStatsRepository tradeStatsRepository; // 상위 추상화 (Repository)
+    private final TradeStatsRepository tradeStatsRepository;
     private final ObjectMapper objectMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @jakarta.annotation.PostConstruct
     public void checkBean() {
@@ -36,8 +37,6 @@ public class TradeStatisticsService {
             log.info("▶▶▶▶▶ [KAFKA 수신 성공] raw message: {}", message);
 
             ExecutionEvent event = objectMapper.readValue(message, ExecutionEvent.class);
-            log.info("Indexing trade stats for ES: orderId={}", event.orderId());
-            log.info("▶▶▶▶▶ [매핑 완료] orderId: {}", event.orderId());
 
             TradeStatsDoc stats = new TradeStatsDoc(
                     null,
@@ -57,7 +56,7 @@ public class TradeStatisticsService {
             ack.acknowledge();
             log.debug("TradeStatsDoc indexed: stockCode={} side={}", event.stockCode(), event.orderSide());
         } catch (Exception e) {
-            log.error("▶▶▶▶▶ [에러] 데이터 처리 중 예외 발생", e);
+            log.error("▶▶▶▶▶ [에러] 데이터 처리 중 예외 발생 : {}", e.getMessage());
         }
     }
 
@@ -68,19 +67,32 @@ public class TradeStatisticsService {
             }
 
             String metaKey = "account:holdings:meta:" + event.userId();
-            Object metaJson = redisTemplate.opsForHash().get(metaKey, event.stockCode());
+            Object metaRaw = redisTemplate.opsForHash().get(metaKey, event.stockCode());
 
-            if (metaJson != null) {
-                Map<String, Object> meta = objectMapper.readValue(metaJson.toString(), Map.class);
-                BigDecimal avgPrice = new BigDecimal(meta.get("avgPrice").toString());
-                BigDecimal executedPrice = event.executedPrice();
+            if (metaRaw == null) return 0.0;
 
-                if (avgPrice.compareTo(BigDecimal.ZERO) > 0) {
-                    return executedPrice.subtract(avgPrice)
-                            .divide(avgPrice, 4, RoundingMode.HALF_UP)
-                            .multiply(BigDecimal.valueOf(100))
-                            .doubleValue();
-                }
+            String metaStr = metaRaw instanceof String
+                    ? (String) metaRaw
+                    : metaRaw.toString();
+
+            Map<String, Object> meta = objectMapper.readValue(metaStr, Map.class);
+
+
+            Object avgPriceObj = meta.get("avgPrice");
+            if (avgPriceObj == null) {
+                log.error("평균단가 계산 실패");
+                return 0.0;
+            }
+
+
+            BigDecimal avgPrice = new BigDecimal(avgPriceObj.toString());
+            BigDecimal executedPrice = event.executedPrice();
+
+            if (avgPrice.compareTo(BigDecimal.ZERO) > 0) {
+                return executedPrice.subtract(avgPrice)
+                        .divide(avgPrice, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                        .doubleValue();
             }
         } catch (Exception e) {
             log.warn("수익률 계산 실패 : {}", e.getMessage());
