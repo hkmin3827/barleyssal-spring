@@ -32,7 +32,9 @@ public enum ErrorCode {
     INVALID_REQUEST_QUANTITY(HttpStatus.CONFLICT, "주문했던 주식 수가 취소 요청한 수보다 작습니다. 관리자 확인이 필요합니다."),
     ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리되었거나 변경된 주문입니다."),
     MARKET_CLOSED(HttpStatus.BAD_REQUEST, "장 운영 시간이 아닙니다."),
-    WATCHLIST_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "관심종목은 최대 40개까지 등록할 수 있습니다.");
+    WATCHLIST_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "관심종목은 최대 40개까지 등록할 수 있습니다."),
+    CONCURRENT_REQUEST_DENIED(HttpStatus.TOO_MANY_REQUESTS, "동시 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "락 획득 대기 중 서버 interrupt가 발생하였습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

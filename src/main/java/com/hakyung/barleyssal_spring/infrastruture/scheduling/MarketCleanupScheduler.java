@@ -37,17 +37,18 @@ public class MarketCleanupScheduler {
     private final StringRedisTemplate redisTemplate;
     private final OrderSearchRepository orderSearchRepository;
     private final ElasticsearchOperations esOps;
+    private final OrderBulkExpireScheduler orderBulkExpireScheduler;
 
     @Transactional
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void maintenanceCycle() {
         log.info("Starting daily maintenance cleanup...");
 
-        int expiredCount = orderRepository.bulkUpdateStatus(
-                OrderStatus.EXPIRED, 
-                Set.of(OrderStatus.PENDING, OrderStatus.SUBMITTED)
-        );
-        log.info("DB Cleanup: {} orders marked as EXPIRED", expiredCount);
+        try {
+            orderBulkExpireScheduler.expireRemaining();
+        } catch (Exception e) {
+            log.error("Critical: Midnight fallback expire failed. Some orders may remain SUBMITTED.", e);
+        }
 
         try {
             syncYesterdayOrdersToElastic();
@@ -63,7 +64,7 @@ public class MarketCleanupScheduler {
 
         clearRedisKeys("orders:pending:*");
         clearRedisKeys("order:meta:*");
-        
+
         log.info("Redis Cleanup: Pending orders and metadata cleared");
     }
 

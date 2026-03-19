@@ -11,7 +11,9 @@ import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
 import com.hakyung.barleyssal_spring.domain.order.OrderSide;
 import com.hakyung.barleyssal_spring.domain.order.OrderType;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
+import com.hakyung.barleyssal_spring.global.exception.AccountNotFoundException;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
+import com.hakyung.barleyssal_spring.global.lock.DistributedLock;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.OrderEventProducer;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.OrderCreatedEvent;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
@@ -37,10 +39,11 @@ public class OrderService {
     private final RedisAccountRepository redisAccountRepository;
     private final RedisMarketRepository redisMarketRepository;
 
+    @DistributedLock(key = "'order:user:' + #userId", waitTime = 0, leaseTime = 3)
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest req) {
         Account account = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
 
         StockCode code = StockCode.of(req.stockCode());
         Money limitPrice = req.limitPrice() != null ?  Money.of(req.limitPrice()) : null;
@@ -99,7 +102,7 @@ public class OrderService {
     @Transactional
     public void cancelOrder(Long userId, Long orderId) {
         Account account = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
 
         Order order = orderRepository.findByIdAndAccountId(orderId, account.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
@@ -124,7 +127,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(Long userId) {
         Account account = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
         return orderRepository.findByAccountIdAndUserId(account.getId(), userId)
                 .stream().map(OrderResponse::from).toList();
     }

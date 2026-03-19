@@ -1,6 +1,6 @@
 package com.hakyung.barleyssal_spring.global.config;
 
-import com.hakyung.barleyssal_spring.global.jwt.SessionJwtAuthenticationFilter;
+import com.hakyung.barleyssal_spring.global.security.SessionJwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -39,22 +39,33 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(requestHandler)
-                        .ignoringRequestMatchers("/api/v1/auth/**")
-                )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                        .ignoringRequestMatchers(
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/signup",
+                                "/api/v1/auth/password/forgot",
+                                "/api/v1/auth/password/reset")
+                ).cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/**",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/signup",
+                                "/api/v1/auth/password/forgot",
+                                "/api/v1/auth/password/reset",
                                 "/api/v1/stats/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/users/**", "/api/v1/orders/**", "/api/v1/accounts/**", "/api/v1/watchlist/**").authenticated()
+                        .requestMatchers(
+                                "/api/v1/auth/logout",
+                                "/api/v1/auth/withdraw",
+                                "/api/v1/users/**",
+                                "/api/v1/orders/**",
+                                "/api/v1/accounts/**",
+                                "/api/v1/watchlist/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
-                )
-                .addFilterBefore(sessionJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                ).addFilterBefore(sessionJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
@@ -70,6 +81,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
 }

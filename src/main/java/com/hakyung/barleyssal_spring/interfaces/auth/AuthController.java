@@ -27,6 +27,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -45,7 +47,7 @@ public class AuthController {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        String accessToken = jwtProvider.createAccessToken(userDetails.getId(), userDetails.getRole());
+        String accessToken = jwtProvider.createAccessToken(Objects.requireNonNull(userDetails).getId(), userDetails.getRole());
 
         HttpSession session = req.getSession(true);
         session.setAttribute("ACCESS_TOKEN", accessToken);

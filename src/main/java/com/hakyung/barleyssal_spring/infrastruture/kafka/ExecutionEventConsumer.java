@@ -7,6 +7,7 @@ import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.domain.common.vo.StockCode;
 import com.hakyung.barleyssal_spring.domain.order.*;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
+import com.hakyung.barleyssal_spring.global.exception.AccountNotFoundException;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.kafka.events.ExecutionEvent;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
@@ -48,7 +49,7 @@ public class ExecutionEventConsumer {
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
             Account account = accountRepository.findById(Long.valueOf(event.accountId()))
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
 
 
             StockCode code = StockCode.of(event.stockCode());
@@ -65,7 +66,6 @@ public class ExecutionEventConsumer {
                 log.warn("Order CANCELLED: orderId={}", order.getId());
             } else {
                 Money execPrice = Money.of(event.executedPrice());
-
                 order.fill(execPrice, qty);
 
                 if (OrderSide.BUY.name().equals(event.orderSide())) {

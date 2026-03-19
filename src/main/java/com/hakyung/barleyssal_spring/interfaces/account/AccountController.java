@@ -4,6 +4,7 @@ import com.hakyung.barleyssal_spring.application.account.AccountService;
 import com.hakyung.barleyssal_spring.application.account.dto.AccountResponse;
 import com.hakyung.barleyssal_spring.application.account.dto.HoldingResponse;
 import com.hakyung.barleyssal_spring.application.account.dto.SetPrincipalRequest;
+import com.hakyung.barleyssal_spring.global.ratelimit.RateLimit;
 import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getOrCreateAccount(user.getId(), user.getUserName()));
     }
 
+    @RateLimit(maxRequests = 2, windowSeconds = 1)
     @PutMapping("/set-principal")
     public ResponseEntity<AccountResponse> setPrincipal(
         @AuthenticationPrincipal CustomUserDetails user,

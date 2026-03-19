@@ -3,6 +3,7 @@ package com.hakyung.barleyssal_spring.interfaces.order;
 import com.hakyung.barleyssal_spring.application.order.OrderService;
 import com.hakyung.barleyssal_spring.application.order.dto.CreateOrderRequest;
 import com.hakyung.barleyssal_spring.application.order.dto.OrderResponse;
+import com.hakyung.barleyssal_spring.global.ratelimit.RateLimit;
 import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    @RateLimit(maxRequests = 2, windowSeconds = 1)
     @PostMapping
     public ResponseEntity<OrderResponse> placeOrder(
         @AuthenticationPrincipal CustomUserDetails user,
@@ -29,6 +31,7 @@ public class OrderController {
             .body(orderService.createOrder(user.getId(), req));
     }
 
+    @RateLimit
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<Void> cancelOrder(
             @AuthenticationPrincipal CustomUserDetails user,
@@ -39,6 +42,7 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
+    @RateLimit
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getMyOrders(
         @AuthenticationPrincipal CustomUserDetails user

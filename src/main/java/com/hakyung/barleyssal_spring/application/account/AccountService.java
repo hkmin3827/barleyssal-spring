@@ -8,6 +8,7 @@ import com.hakyung.barleyssal_spring.domain.account.AccountNumberGenerator;
 import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
+import com.hakyung.barleyssal_spring.global.exception.AccountNotFoundException;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class AccountService {
             throw new CustomException(ErrorCode.INVALID_PRINCIPAL_UNIT);
         }
         Account account = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
         account.resetPrincipal(Money.of(req.principal()));
 
         redisAccountRepository.syncAccountToRedis(account);
@@ -57,7 +58,7 @@ public class AccountService {
     @Transactional(readOnly = true)
     public List<HoldingResponse> getHoldings(Long userId) {
         Account account = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+                .orElseThrow(AccountNotFoundException::new);
 
         return account.getHoldings().stream()
                 .map(HoldingResponse::from)

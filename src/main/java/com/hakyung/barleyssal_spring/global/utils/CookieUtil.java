@@ -14,14 +14,14 @@ public class CookieUtil {
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
-//                 .secure(true) // 배포 환경일 경우 주석 해제
+                .secure(true)
                 .build();
 
         ResponseCookie csrfCookie = ResponseCookie.from("XSRF-TOKEN", "")
                 .path("/")
                 .maxAge(0)
                 .httpOnly(false)
-                // .secure(true) // 배포 환경일 경우 주석 해제
+                .secure(true)
                 .build();
 
         res.addHeader(HttpHeaders.SET_COOKIE, sessionCookie.toString());

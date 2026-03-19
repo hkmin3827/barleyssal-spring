@@ -70,6 +70,9 @@ public class Order {
     @Column(name = "blocked_deposit", precision = 19, scale = 2)
     private BigDecimal blockedDeposit;   // 시장가 고가 기준 필요한 예수금
 
+    @Column(name = "recovery_count", nullable = false)
+    private int recoveryCount = 0;
+
     @Version
     private Long version;
 
@@ -134,6 +137,13 @@ public class Order {
             touch();
         }
     }
+
+    public void incrementRecoveryCount() {
+        this.recoveryCount++;
+        touch();
+    }
+
+
 
     private void requireStatus(OrderStatus... allowed) {
         for (var s : allowed) if (this.orderStatus == s) return;

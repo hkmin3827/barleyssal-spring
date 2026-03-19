@@ -22,6 +22,9 @@ public class UserController {
         return userService.getMe(user.getId());
     }
 
+
+
+    // 프로필, 비밀번호 기능 요구될 시 프론트에도 구현
     @PostMapping("/me/password-verify")
     public ResponseEntity<Void> passwordVerify(
             @AuthenticationPrincipal CustomUserDetails user,

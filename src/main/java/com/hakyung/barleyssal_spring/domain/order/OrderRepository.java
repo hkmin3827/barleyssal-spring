@@ -25,4 +25,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findTop1000ByCreatedAtBefore(Instant threshold);
 
     List<Order> findTop1000ByIdGreaterThanAndCreatedAtBetweenOrderByIdAsc(Long lastId, Instant start, Instant end);
+
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.orderStatus = com.hakyung.barleyssal_spring.domain.order.OrderStatus.SUBMITTED
+          AND o.orderType   = com.hakyung.barleyssal_spring.domain.order.OrderType.LIMIT
+          AND o.createdAt  <= :staleThreshold
+        ORDER BY o.createdAt ASC
+        """)
+    List<Order> findStaleSubmittedLimitOrders(@Param("staleThreshold") Instant staleThreshold);
+
+    List<Order> findByOrderStatusIn(Collection<OrderStatus> statuses);
 }

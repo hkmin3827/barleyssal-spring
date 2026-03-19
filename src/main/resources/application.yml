@@ -23,7 +23,7 @@ spring:
         jdbc.batch_size: 50
         query.fail_on_pagination_over_collection_fetch: true
         show_sql: true
-    open-in-view: true
+    open-in-view: false
 
   threads:
     virtual:
@@ -112,8 +112,8 @@ rest:
     read-timeout: 5000
 
 jwt:
-  secret: "barleyssal-project-secret-key-must-be-at-least-32-characters-long!!"
-  expiration: 86400000 # 24시간
+  secret: ${JWT_SECRET_KEY}
+  expiration: 86400000
 
 app:
   policy:
@@ -127,6 +127,6 @@ logging:
   level:
     org.springframework.security: INFO
     com.hakyung.barleyssal_spring: DEBUG
-    org.apache.kafka.clients: INFO
+    org.apache.kafka.clients: WARN
     org.springframework.kafka: INFO
-    org.apache.kafka: INFO
+    org.apache.kafka: WARN

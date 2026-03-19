@@ -1,9 +1,9 @@
-package com.hakyung.barleyssal_spring.global.jwt;
+package com.hakyung.barleyssal_spring.global.security;
 
 import com.hakyung.barleyssal_spring.domain.user.User;
 import com.hakyung.barleyssal_spring.domain.user.UserRepository;
 import com.hakyung.barleyssal_spring.global.exception.UserNotFoundException;
-import com.hakyung.barleyssal_spring.global.security.CustomUserDetails;
+import com.hakyung.barleyssal_spring.global.jwt.JwtProvider;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
