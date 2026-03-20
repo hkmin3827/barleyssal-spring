@@ -55,20 +55,21 @@ public class ExecutionEventConsumer {
             StockCode code = StockCode.of(event.stockCode());
             long qty = Long.parseLong(event.executedQuantity());
 
-            if (OrderSide.BUY.name().equals(event.orderSide())) {
-                account.unblockDeposit(Money.of(order.getBlockedDeposit()));
-            } else {
-                account.unblockHolding(code, Long.parseLong(event.executedQuantity()));
-            }
 
             if ("CANCELLED".equals(event.executionStatus())) {
                 order.cancel();
+                if (OrderSide.BUY.name().equals(event.orderSide())) {
+                    account.unblockDeposit(Money.of(order.getBlockedDeposit()));
+                } else {
+                    account.unblockHolding(code, qty);
+                }
                 log.warn("Order CANCELLED: orderId={}", order.getId());
             } else {
                 Money execPrice = Money.of(event.executedPrice());
                 order.fill(execPrice, qty);
 
                 if (OrderSide.BUY.name().equals(event.orderSide())) {
+                    account.unblockDeposit(Money.of(order.getBlockedDeposit()));
                     account.processBuy(code, qty, execPrice);
                 } else {
                     account.processSell(code, qty, execPrice);

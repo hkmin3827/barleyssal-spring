@@ -114,7 +114,6 @@ public class OrderService {
         } else {
             account.unblockHolding(order.getStockCode(), order.getQuantity());
         }
-
         if (order.getOrderType() == OrderType.LIMIT) {
             redisOrderRepository.removeLimitOrder(order.getId(), order.getStockCode(), order.getOrderSide());
         }

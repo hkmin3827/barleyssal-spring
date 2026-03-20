@@ -50,7 +50,7 @@ public class Holding {
     }
 
     public void addQuantity(long qty, Money price) {
-        BigDecimal totalCost = this.avgPrice.multiply(BigDecimal.valueOf(qty))
+        BigDecimal totalCost = this.avgPrice.multiply(BigDecimal.valueOf(this.totalQuantity))
                 .add(price.amount().multiply(BigDecimal.valueOf(qty)));
 
         this.totalQuantity += qty;
