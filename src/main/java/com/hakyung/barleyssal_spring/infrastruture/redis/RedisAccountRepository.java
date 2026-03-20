@@ -90,7 +90,6 @@ public class RedisAccountRepository {
         }
 
         redisTemplate.opsForHash().putAll(tempKey, dataMap);
-        redisTemplate.expire(tempKey, Duration.ofMinutes(5));
         redisTemplate.rename(tempKey, realKey);
     }
 }
