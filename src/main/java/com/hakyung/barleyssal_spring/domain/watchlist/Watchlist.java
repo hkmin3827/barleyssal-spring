@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(
         name = "watchlists",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "stock_code"})
+        uniqueConstraints = @UniqueConstraint(name = "uk_watchlist_user_stock", columnNames = {"user_id", "stock_code"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Watchlist {

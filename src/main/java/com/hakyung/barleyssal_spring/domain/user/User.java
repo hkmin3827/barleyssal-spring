@@ -38,7 +38,7 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, unique = true)
+    @Column(nullable = false)
     private String phoneNumber;
 
     @Column(nullable = true)

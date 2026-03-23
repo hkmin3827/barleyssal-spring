@@ -23,7 +23,7 @@ public class AuthService {
         if(userRepository.existsByEmail(req.email())){
             throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
         }
-        if(userRepository.existsByPhoneNumber(req.phoneNumber())){
+        if(userRepository.existsByPhoneNumberAndDeletedAtIsNull(req.phoneNumber())){
             throw new CustomException(ErrorCode.PHONE_NUMBER_DUPLICATED);
         }
 

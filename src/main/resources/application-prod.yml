@@ -1,0 +1,48 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import: aws-parameterstore:/prod/barleyssal/
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST_NAME}
+      password: ${REDIS_PASSWORD}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
+  mail:
+    username: ${naver.email}
+    password: ${naver.app.password}
+
+jwt:
+  secret: ${jwt.secret}
+
+app:
+  frontend:
+    base-url: ${FRONT_BASE_URL}
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.hakyung.barleyssal_spring: INFO
+    org.apache.kafka.clients: ERROR
+    org.springframework.kafka: WARN
+    org.apache.kafka: ERROR

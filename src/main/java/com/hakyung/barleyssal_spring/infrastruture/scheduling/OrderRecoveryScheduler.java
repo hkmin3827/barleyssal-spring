@@ -6,9 +6,7 @@ import com.hakyung.barleyssal_spring.domain.common.vo.Money;
 import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
 import com.hakyung.barleyssal_spring.domain.order.OrderSide;
-import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.AccountNotFoundException;
-import com.hakyung.barleyssal_spring.global.exception.CustomException;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +15,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -37,7 +34,7 @@ public class OrderRecoveryScheduler {
     private final StringRedisTemplate  redisTemplate;
 
     @Transactional
-    @Scheduled(fixedDelay = 5 * 60 * 1000)  // 5분
+    @Scheduled(fixedDelay = 3 * 60 * 1000)  // 3분 -> 배포 서버 확인 후 가능하면 1분 또는 2분으로 down
     public void recoverStaleOrders() {
         Instant staleThreshold = Instant.now().minus(Duration.ofMinutes(STALE_MINUTES));
         List<Order> candidates = orderRepository.findStaleSubmittedLimitOrders(staleThreshold);

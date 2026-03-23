@@ -37,7 +37,7 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         if(!user.getPhoneNumber().equals(req.phoneNumber())) {
-            if (userRepository.existsByPhoneNumber(req.phoneNumber())){
+            if (userRepository.existsByPhoneNumberAndDeletedAtIsNull(req.phoneNumber())){
                 throw new CustomException(ErrorCode.PHONE_NUMBER_DUPLICATED);
             }
         }
@@ -64,8 +64,6 @@ public class UserService {
         return UserDetailResponse.from(user);
     }
 
-
-    // 관리자 호출 메서드
     @Transactional(readOnly = true)
     public Page<UsersListResponse> getUsersByActive(boolean active, Pageable pageable) {
         return userRepository.findUsersByActive(active, pageable);

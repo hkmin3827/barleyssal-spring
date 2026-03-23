@@ -11,10 +11,9 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdAndDeletedAtIsNull(Long userId);
-    boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
-    String findUserNameById(Long id);
 
     @Query("""
     select

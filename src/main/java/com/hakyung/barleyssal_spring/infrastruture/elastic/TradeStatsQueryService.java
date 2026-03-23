@@ -157,11 +157,17 @@ public class TradeStatsQueryService {
                     .aggregation().getAggregate().dateHistogram().buckets().array()
                     .stream()
                     .map(bucket -> {
+                        long totalOrders = bucket.docCount();
+                        long executedOrders = bucket.aggregations().get("executed_count").filter().docCount();
+                        double executionRate = totalOrders > 0
+                                ? Math.round((double) executedOrders / totalOrders * 10000.0) / 100.0
+                                : 0.0;
+
                         Map<String, Object> dayBucket = new LinkedHashMap<>();
                         dayBucket.put("date", bucket.keyAsString());
-                        dayBucket.put("totalOrders", bucket.docCount());
-                        dayBucket.put("executedOrders",
-                                bucket.aggregations().get("executed_count").filter().docCount());
+                        dayBucket.put("totalOrders", totalOrders);
+                        dayBucket.put("executedOrders", executedOrders);
+                        dayBucket.put("executionRate", executionRate);
                         return dayBucket;
                     })
                     .collect(Collectors.toList());
