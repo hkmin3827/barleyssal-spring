@@ -10,8 +10,8 @@
 | 서버 | 역할 | 링크 |
 |------|------|------|
 | **Spring Boot** (현재) | 메인 비즈니스 로직 API 서버 | — |
-| **Go** | 실시간 시세·호가·주문 매칭 게이트웨이 | [barleyssal-go](../go) |
-| **React** | 프론트엔드 SPA | [barleyssal-react](../react) |
+| **Go** | 실시간 시세·호가·주문 매칭 게이트웨이 | [barleyssal-go](../barleyssal-go) |
+| **React** | 프론트엔드 SPA | [barleyssal-react](../barleyssal-react-vite) |
 
 <br/>
 
