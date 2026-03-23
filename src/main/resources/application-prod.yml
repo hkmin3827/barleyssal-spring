@@ -2,7 +2,6 @@ spring:
   config:
     activate:
       on-profile: prod
-    import: aws-parameterstore:/prod/barleyssal/
 
   datasource:
     url: ${DB_URL}
@@ -21,6 +20,7 @@ spring:
     redis:
       host: ${REDIS_HOST_NAME}
       password: ${REDIS_PASSWORD}
+      port: ${REDIS_PORT}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
@@ -29,11 +29,11 @@ spring:
     uris: ${ELASTICSEARCH_URIS}
 
   mail:
-    username: ${naver.email}
-    password: ${naver.app.password}
+    username: ${NAVER_EMAIL}
+    password: ${NAVER_APP_PASSWORD}
 
 jwt:
-  secret: ${jwt.secret}
+  secret: ${JWT_SECRET}
 
 app:
   frontend:
