@@ -48,6 +48,7 @@ public class GlobalExceptionHandler {
         return createErrorResponse(ErrorCode.AUTH_FAILED);
     }
 
+    @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleOptimisticLocking(OptimisticLockingFailureException ex) {
         return createErrorResponse(ErrorCode.ALREADY_PROCESSED);
     }

@@ -2,7 +2,6 @@ package com.hakyung.barleyssal_spring.infrastruture.scheduling;
 
 import com.hakyung.barleyssal_spring.domain.order.Order;
 import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
-import com.hakyung.barleyssal_spring.domain.order.OrderStatus;
 import com.hakyung.barleyssal_spring.global.exception.DataArchiveException;
 import com.hakyung.barleyssal_spring.global.exception.DataCleanupException;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.OrderHistoryDoc;

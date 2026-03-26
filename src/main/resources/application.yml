@@ -105,3 +105,17 @@ rest:
 
 jwt:
   expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health,info"
+  endpoint:
+    health:
+      show-details: when_authorized
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: spring-app

@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/signup",
                                 "/api/v1/auth/password/forgot",
                                 "/api/v1/auth/password/reset",
-                                "/api/v1/stats/**"
+                                "/api/v1/stats/**",
+                                "/actuator/**"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/logout",

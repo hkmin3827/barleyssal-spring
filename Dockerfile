@@ -1,12 +1,13 @@
+FROM eclipse-temurin:25-jdk-alpine AS builder
+WORKDIR /build
+COPY . .
+RUN chmod +x ./gradlew
+RUN ./gradlew bootJar -x test
+
 FROM eclipse-temurin:25-jre-alpine
-
 WORKDIR /app
-
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
-
+COPY --from=builder /build/build/libs/*.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV TZ=Asia/Seoul
 EXPOSE 8080
-
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT java $JAVA_OPTS -jar /app/app.jar
