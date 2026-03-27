@@ -27,6 +27,6 @@ public class RateLimitService {
         RedisScript<Long> script = new DefaultRedisScript<>(luaScript, Long.class);
         Long count = redisTemplate.execute(script, Collections.singletonList(key), String.valueOf(windowSeconds));
 
-        return count != null && count <= maxRequests;
+        return count == null || count <= maxRequests;
     }
 }

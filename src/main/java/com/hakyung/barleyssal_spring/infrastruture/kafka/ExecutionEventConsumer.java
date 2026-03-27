@@ -1,6 +1,5 @@
 package com.hakyung.barleyssal_spring.infrastruture.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hakyung.barleyssal_spring.domain.account.Account;
 import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
@@ -14,6 +13,7 @@ import com.hakyung.barleyssal_spring.infrastruture.redis.RedisAccountRepository;
 import com.hakyung.barleyssal_spring.infrastruture.redis.RedisOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -25,6 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile("!test")
 public class ExecutionEventConsumer {
 
     private final OrderRepository orderRepository;
@@ -40,7 +41,7 @@ public class ExecutionEventConsumer {
             groupId     = "barleyssal-spring",
             concurrency = "1"
     )
-    public void onExecutionEvent(String message, Acknowledgment ack) throws JsonProcessingException {
+    public void onExecutionEvent(String message, Acknowledgment ack) throws Exception {
         ExecutionEvent event = null;
         try {
             event = objectMapper.readValue(message, ExecutionEvent.class);

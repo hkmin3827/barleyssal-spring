@@ -1,9 +1,6 @@
 package com.hakyung.barleyssal_spring.infrastruture.kafka.events;
 
-import com.hakyung.barleyssal_spring.domain.order.Order;
-
 import java.math.BigDecimal;
-import java.time.Instant;
 
 public record ExecutionEvent(
     String orderId,

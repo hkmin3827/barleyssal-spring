@@ -50,7 +50,8 @@ public class OrderService {
         Money blockedDeposit = Money.ZERO;
 
         String marketCode = redisMarketRepository.getMarketOperationCode(code.value());
-        if (marketCode != null && !marketCode.startsWith("2")) {
+
+        if (marketCode == null || !marketCode.startsWith("2")) {
             throw new CustomException(ErrorCode.MARKET_CLOSED);
         }
 

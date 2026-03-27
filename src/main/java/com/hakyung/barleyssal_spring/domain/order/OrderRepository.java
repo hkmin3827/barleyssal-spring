@@ -17,10 +17,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByIdAndAccountId(Long orderId, Long accountId);
 
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Order o SET o.orderStatus = :targetStatus, o.updatedAt = CURRENT_TIMESTAMP WHERE o.orderStatus IN :sourceStatuses")
-    int bulkUpdateStatus(@Param("targetStatus") OrderStatus targetStatus,
-                         @Param("sourceStatuses") Collection<OrderStatus> sourceStatuses);
     List<Order> findTop1000ByCreatedAtBefore(Instant threshold);
 
     List<Order> findTop1000ByIdGreaterThanAndCreatedAtBetweenOrderByIdAsc(Long lastId, Instant start, Instant end);
