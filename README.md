@@ -14,7 +14,7 @@
 | **React** | 프론트엔드 SPA | [barleyssal-react](https://github.com/hkmin3827/barleyssal-react-vite) |
 
 <br/>
-## Vercel 페이지
+## Vercel Link
 
 [⭐ Barleyssal 홈페이지 바로 가기](https://barleyssal.vercel.app/)
 
