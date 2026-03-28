@@ -68,6 +68,12 @@ class OrderServiceIntegrationTest {
 
     @BeforeEach
     void setUp() throws InterruptedException {
+        RLock rLock = mock(RLock.class);
+
+        lenient().when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        lenient().when(rLock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
+        lenient().when(rLock.isLocked()).thenReturn(true);
+
         SignupRequest req = new SignupRequest(
                 "integration@test.com", "Test1234!", "통합테스터", "01012345678");
         User user = User.of(req, "$2a$10$encodedpassword");
@@ -84,12 +90,6 @@ class OrderServiceIntegrationTest {
         given(redisMarketRepository.getHighPrice("000660")).willReturn(null);
         willDoNothing().given(orderEventProducer).publishOrderCreated(any());
         willDoNothing().given(redisAccountRepository).syncAccountToRedis(any());
-
-        RLock rLock = mock(RLock.class);
-
-        lenient().doReturn(rLock).when(redissonClient).getLock(anyString());
-        lenient().doReturn(true).when(rLock).tryLock(anyLong(), anyLong(), any());
-        lenient().doReturn(true).when(rLock).isLocked();
     }
 
     @Nested
