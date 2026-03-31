@@ -11,5 +11,4 @@ class BarleyssalSpringApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 }

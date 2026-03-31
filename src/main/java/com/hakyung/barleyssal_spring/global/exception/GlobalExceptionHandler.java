@@ -2,6 +2,7 @@ package com.hakyung.barleyssal_spring.global.exception;
 
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleOptimisticLocking(OptimisticLockingFailureException ex) {
         return createErrorResponse(ErrorCode.ALREADY_PROCESSED);
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handlePessimisticLock(PessimisticLockingFailureException ex) {
+        return createErrorResponse(ErrorCode.CONCURRENT_REQUEST_DENIED);
     }
 
     private ResponseEntity<ErrorResponse> createErrorResponse(ErrorCode errorCode) {

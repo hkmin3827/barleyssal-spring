@@ -43,13 +43,14 @@ public class ExecutionEventConsumer {
     )
     public void onExecutionEvent(String message, Acknowledgment ack) throws Exception {
         ExecutionEvent event = null;
+
         try {
             event = objectMapper.readValue(message, ExecutionEvent.class);
 
             Order order = orderRepository.findById(Long.valueOf(event.orderId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-            Account account = accountRepository.findById(Long.valueOf(event.accountId()))
+            Account account = accountRepository.findByIdWithLock(Long.valueOf(event.accountId()))
                 .orElseThrow(AccountNotFoundException::new);
 
 

@@ -32,6 +32,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByOrderStatusIn(Collection<OrderStatus> statuses);
 
+    List<Order> findByAccountIdAndOrderStatusIn(Long accountId, Collection<OrderStatus> statuses);
+
     @Modifying
     @Query("DELETE FROM Order o WHERE o.accountId = :accountId")
     void deleteByAccountId(@Param("accountId") Long accountId);

@@ -10,4 +10,4 @@ COPY --from=builder /build/build/libs/*.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV TZ=Asia/Seoul
 EXPOSE 8080
-ENTRYPOINT java $JAVA_OPTS -jar /app/app.jar
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

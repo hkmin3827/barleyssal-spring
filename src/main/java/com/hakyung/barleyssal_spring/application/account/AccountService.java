@@ -7,6 +7,9 @@ import com.hakyung.barleyssal_spring.domain.account.Account;
 import com.hakyung.barleyssal_spring.domain.account.AccountNumberGenerator;
 import com.hakyung.barleyssal_spring.domain.account.AccountRepository;
 import com.hakyung.barleyssal_spring.domain.common.vo.Money;
+import com.hakyung.barleyssal_spring.domain.order.Order;
+import com.hakyung.barleyssal_spring.domain.order.OrderRepository;
+import com.hakyung.barleyssal_spring.domain.order.OrderStatus;
 import com.hakyung.barleyssal_spring.global.constant.ErrorCode;
 import com.hakyung.barleyssal_spring.global.exception.AccountNotFoundException;
 import com.hakyung.barleyssal_spring.global.exception.CustomException;
@@ -25,6 +28,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
     private final RedisAccountRepository redisAccountRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public AccountResponse getOrCreateAccount(Long userId, String userName) {
@@ -40,14 +44,25 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
-
     @Transactional
     public AccountResponse setPrincipal(Long userId, SetPrincipalRequest req) {
         if (req.principal().remainder(BigDecimal.TEN).compareTo(BigDecimal.ZERO) != 0) {
             throw new CustomException(ErrorCode.INVALID_PRINCIPAL_UNIT);
         }
-        Account account = accountRepository.findByUserId(userId)
+        Account account = accountRepository.findByUserIdWithLock(userId)
                 .orElseThrow(AccountNotFoundException::new);
+
+        List<Order> activeOrders = orderRepository
+                .findByAccountIdAndOrderStatusIn(
+                        account.getId(),
+                        List.of(OrderStatus.PENDING, OrderStatus.SUBMITTED)
+                );
+
+        for (Order order : activeOrders) {
+            order.cancel();
+        }
+        orderRepository.saveAll(activeOrders);
+
         account.resetPrincipal(Money.of(req.principal()));
 
         redisAccountRepository.syncAccountToRedis(account);

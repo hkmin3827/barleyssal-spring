@@ -50,9 +50,6 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Holding> holdings =new ArrayList<>();
 
-    @Version
-    private Long version;
-
     public static Account create(Long userId, String userName, Money principal, String accountNumber) {
         var acc = new Account();
         acc.userId = userId;

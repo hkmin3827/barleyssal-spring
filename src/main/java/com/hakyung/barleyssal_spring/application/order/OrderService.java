@@ -42,7 +42,7 @@ public class OrderService {
     @DistributedLock(key = "'order:user:' + #userId", waitTime = 0, leaseTime = 3)
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest req) {
-        Account account = accountRepository.findByUserId(userId)
+        Account account = accountRepository.findByUserIdWithLock(userId)
                 .orElseThrow(AccountNotFoundException::new);
 
         StockCode code = StockCode.of(req.stockCode());
@@ -102,7 +102,7 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(Long userId, Long orderId) {
-        Account account = accountRepository.findByUserId(userId)
+        Account account = accountRepository.findByUserIdWithLock(userId)
                 .orElseThrow(AccountNotFoundException::new);
 
         Order order = orderRepository.findByIdAndAccountId(orderId, account.getId())

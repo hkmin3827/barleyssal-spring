@@ -60,12 +60,13 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      linger.ms: 0
     consumer:
       group-id: barleyssal-stats-group
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 10
-      fetch-max-wait: 500ms
+      fetch-max-wait: 100ms
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:

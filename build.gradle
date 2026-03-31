@@ -67,7 +67,6 @@ dependencies {
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	mockitoAgent 'org.mockito:mockito-core:5.20.0'
-
 }
 
 tasks.named('test') {
