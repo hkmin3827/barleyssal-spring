@@ -75,7 +75,7 @@ public class SessionJwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (ExpiredJwtException e) {
                 sendErrorResponse(res, "TOKEN_EXPIRED", "만료된 토큰입니다.");
                 return;
-            } catch (UsernameNotFoundException | DisabledException | JwtException e) {
+            } catch (UsernameNotFoundException | DisabledException | JwtException | UserNotFoundException e) {
                 sendErrorResponse(res, "UNAUTHORIZED", e.getMessage());
                 return;
             } catch (Exception e) {
