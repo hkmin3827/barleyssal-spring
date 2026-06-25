@@ -104,7 +104,7 @@ public class KafkaConfig {
         FixedBackOff fixedBackOff = new FixedBackOff(5000L, 3L);
 
         return new DefaultErrorHandler((record, exception) -> {
-            System.err.println("최종 실패 : " + record.value() + ", 원인s: " + exception.getMessage());
+            System.err.println("최종 실패 : " + record.value() + ", 원인 : " + exception.getMessage());
         }, fixedBackOff);
     }
 }

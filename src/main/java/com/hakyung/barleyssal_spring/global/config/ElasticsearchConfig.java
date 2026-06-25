@@ -4,7 +4,6 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,7 +14,6 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 import java.time.Duration;
 
 @Configuration
-@RequiredArgsConstructor
 @Profile("!test")
 @EnableElasticsearchRepositories(basePackages = "com.hakyung.barleyssal_spring.infrastruture.elastic")
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
