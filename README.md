@@ -239,3 +239,10 @@ Flyway를 통한 버전 관리: `src/main/resources/db/migration/V1__init_schema
 - **쿠키 설정**: `HttpOnly`, `Secure`, `SameSite=Lax`
 - **비밀번호**: BCrypt 해싱
 - **세션 TTL**: 30분 (Redis Spring Session)
+
+---
+
+## 이후 역량 향상을 위한 코드 개선 필요 사항 기록
+
+- RedisConfig.java : RedisConnectionFactory 빈 정의 불필요. redis default 클라이언트가 lettuce이고, application.yml 값 자동 주입됨
+- 
