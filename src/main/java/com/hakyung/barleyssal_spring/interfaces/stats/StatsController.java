@@ -1,6 +1,5 @@
-package com.hakyung.barleyssal_spring.interfaces.StatsController;
+package com.hakyung.barleyssal_spring.interfaces.stats;
 
-import com.hakyung.barleyssal_spring.global.ratelimit.RateLimit;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.TradeStatsDoc;
 import com.hakyung.barleyssal_spring.infrastruture.elastic.TradeStatsQueryService;
 import lombok.RequiredArgsConstructor;
