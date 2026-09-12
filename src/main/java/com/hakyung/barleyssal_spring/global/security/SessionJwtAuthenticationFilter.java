@@ -76,7 +76,7 @@ public class SessionJwtAuthenticationFilter extends OncePerRequestFilter {
                 sendErrorResponse(res, "TOKEN_EXPIRED", "만료된 토큰입니다.");
                 return;
             } catch (UsernameNotFoundException | DisabledException | JwtException | UserNotFoundException e) {
-                sendErrorResponse(res, "UNAUTHORIZED", e.getMessage());
+                sendErrorResponse(res, "UNAUTHORIZED", "인증에 실패했습니다.");
                 return;
             } catch (Exception e) {
                 res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
